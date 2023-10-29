@@ -161,3 +161,8 @@ cython_debug/
 
 # Frontend
 info-retrieval/node_modules
+
+
+#backend
+backend/env
+backend/.env

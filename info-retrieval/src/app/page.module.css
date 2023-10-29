@@ -3,8 +3,65 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 6rem;
+  padding: 2rem;
   min-height: 100vh;
+}
+
+.h1 {
+  font-family: var(--font-mono);
+  font-weight: bold;
+  font-size: 3rem;
+}
+
+.h1 span {
+  font-size: 3rem;
+}
+
+.body {
+  flex-grow: 1;
+  border-width: 1;
+  border-color: blue;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.body section {
+  flex-grow: 1;
+  width: 100%;
+  display: inherit;
+  justify-content: inherit;
+}
+
+.body form {
+  height: 10vh;
+  margin-top: 5%;
+  width: 100%;
+  display: inherit;
+  justify-content: inherit;
+  align-items: center;
+}
+
+.body label {
+  font-family: var(--font-mono);
+  font-weight: bold;
+  font-size: 1.2em;
+  margin-right: 1.em;
+}
+
+.arrow {
+  font-family: var(--font-mono);
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #003592;
+  margin-inline: 1em;
+}
+
+.body input {
+  border-width: 0px;
+  height: 5vh;
+  padding-left: 2%;
 }
 
 .description {
