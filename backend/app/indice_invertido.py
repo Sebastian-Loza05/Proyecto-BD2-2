@@ -1,12 +1,14 @@
 import math
 import pickle
 from collections import defaultdict
+import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 import pandas as pd
 import os
 
+nltk.download('stopwords')
 TERMS_LIMIT = 1000
 stop_words = set(stopwords.words('english')).union(set(stopwords.words('spanish')))
 block_num = 0
@@ -19,7 +21,7 @@ def score_tf(tf):
     return 1 + math.log10(tf) if tf > 0 else 0
 
 def score_idf(N, df_t):
-    return math.log10(N/(1+df_t)) # Suavización añadida al IDF
+    return math.log10(N / (1 + df_t))  # Suavización añadida al IDF
 
 def write_block_to_disk(inverted_index, block_num):
     with open(f"block_{block_num}.pkl", "wb") as file:
@@ -29,11 +31,11 @@ def preprocess_text(text):
     text = ' '.join([word for word in word_tokenize(text) if word.isalpha()])
     tokens = word_tokenize(text)
     tokens = [word for word in tokens if word.lower() not in stop_words]
-    
+
     # Determine main language of text for stemming (simple heuristic)
     stemmer = stemmer_spanish if "el" in tokens or "la" in tokens else stemmer_english
     stemmed_tokens = [stemmer.stem(token) for token in tokens]
-    
+
     return ' '.join(stemmed_tokens)
 
 def spimi_invert(docs):
@@ -66,7 +68,7 @@ def calculate_idf_values(num_docs, num_blocks):
             df[term] += len(set(postings_list))
 
     idf_values = {term: score_idf(num_docs, df_t) for term, df_t in df.items()}
-    
+
     return idf_values
 
 def retrieve_top_k(query, k, num_blocks, num_docs, idf_values):
@@ -97,7 +99,7 @@ def cosine(query, block_num, num_docs, idf_values):
 
     # Normalización (division por norma L2)
     for doc_id, score in doc_scores.items():
-        doc_length = sum([score_tf(block_index[term].count(doc_id))**2 for term in block_index if doc_id in block_index[term]])**0.5
+        doc_length = sum([score_tf(block_index[term].count(doc_id))**2 for term in block_index if doc_id in block_index[term]]) ** 0.5
         if doc_length > 0:
             doc_scores[doc_id] /= doc_length
 
@@ -108,20 +110,21 @@ def cosine(query, block_num, num_docs, idf_values):
 
     return doc_scores
 
-df = pd.read_csv('spotify.csv', on_bad_lines='skip')
-df['combined_text'] = df.apply(lambda row: ' '.join(row.astype(str)), axis=1)
-df['processed_text'] = df['combined_text'].apply(preprocess_text)
-docs = df['processed_text'].tolist()
 
-spimi_invert(docs)
-
-idf_values = calculate_idf_values(len(df), block_num)
-
-query_original = "My Nigga,YG"
-query = preprocess_text(query_original)
-print(f"Query original: {query_original}")
-print(f"Query procesado: {query}")
-k = 10
-num_docs = len(df)
-top_k_results = retrieve_top_k(query, k, block_num, num_docs, idf_values)
-print(top_k_results)
+# df = pd.read_csv('spotify.csv', on_bad_lines='skip')
+# df['combined_text'] = df.apply(lambda row: ' '.join(row.astype(str)), axis=1)
+# df['processed_text'] = df['combined_text'].apply(preprocess_text)
+# docs = df['processed_text'].tolist()
+#
+# spimi_invert(docs)
+#
+# idf_values = calculate_idf_values(len(df), block_num)
+#
+# query_original = "My Nigga,YG"
+# query = preprocess_text(query_original)
+# print(f"Query original: {query_original}")
+# print(f"Query procesado: {query}")
+# k = 10
+# num_docs = len(df)
+# top_k_results = retrieve_top_k(query, k, block_num, num_docs, idf_values)
+# print(top_k_results)
