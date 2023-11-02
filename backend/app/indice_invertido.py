@@ -1,13 +1,15 @@
 import math
 import pickle
 import os
+import nltk
 from collections import defaultdict
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 import pandas as pd
 from itertools import islice
-
+nltk.download('stopwords')
+nltk.download('punkt')
 TERMS_LIMIT = 1000
 stop_words = set(stopwords.words('english')).union(set(stopwords.words('spanish')))
 block_num = 0
@@ -24,7 +26,7 @@ def print_first_n_terms(n):
         print(term)
 
 def load_full_dataframe():
-    df = pd.read_csv('spotify.csv', on_bad_lines='skip')
+    df = pd.read_csv('app/spotify.csv', on_bad_lines='skip')
     df['combined_text'] = df.apply(lambda row: ' '.join(row.astype(str)), axis=1)
     df['processed_text'] = df['combined_text'].apply(preprocess_text)
     return df
