@@ -151,6 +151,8 @@ def score_documents(query, merged_index):
 
     return doc_scores
 
+print("Indice importado")
+
 
 if not os.path.exists("blocks/merge.pkl"):
     print("Creando índice invertido...")
@@ -163,24 +165,23 @@ if not os.path.exists("blocks/merge.pkl"):
         merged_index = pickle.load(file)
 else:
     print("Abriendo índice creado...")
-  
     df = load_light_dataframe()  
     with open("blocks/merge.pkl", "rb") as file:
         merged_index = pickle.load(file)
     num_docs = sum([len(postings) for postings in merged_index.values()]) 
+print("Indice cargado")
+    #query_original = "(Maluma, baby; Ozuna; mamacita) Me pongo"
+    #query = preprocess_text(query_original)
 
-query_original = "cancion de calvin harris blame"
-query = preprocess_text(query_original)
+    #print("Primeros 20 Terminos del indice: ")
+    #print_first_n_terms(20)
 
-print("Primeros 20 Terminos del indice: ")
-print_first_n_terms(20)
+    #print("\nEstructura del indice:") 
+    #first_key = next(iter(merged_index))
+    #print(f"{first_key}: {merged_index[first_key]}")
 
-print("\nEstructura del indice:") #Postings -> Numero posicion de Fila del csv Por ejemplo abrazadito: {'postings': {12: {'tf': 4, 'tf-idf': 15.15587704622207}, ... Linea 12 que es todo un documento abrazadito tiene el score tf: 4 y tf-idf 15.5 respecto a esa fila 12.
-first_key = next(iter(merged_index))
-print(f"{first_key}: {merged_index[first_key]}")
-
-print(f"\nQuery original: {query_original}")
-print(f"Query procesado: {query}")
-k = 10
-top_k_results = retrieve_top_k(query, k, merged_index, num_docs)
-print(top_k_results)
+    #print(f"\nQuery original: {query_original}")
+    #print(f"Query procesado: {query}")
+    #k = 10
+    #top_k_results = retrieve_top_k(query, k, merged_index, num_docs)
+    #print(top_k_results)
