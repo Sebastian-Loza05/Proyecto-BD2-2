@@ -22,7 +22,8 @@ playlist_name: Pinoy Classic Rock
 ```
 Sin indexación, una consulta de búsqueda requeriría escanear cada documento en la base de datos, lo que sería altamente ineficiente en conjuntos de datos grandes. El índice invertido, en particular, es beneficioso ya que proporciona una estructura de datos optimizada para consultas de texto libre.
 
-## Backend: Índice Invertido
+## Backend
+### Índice Invertido
 El código presentado es para construir un índice invertido para un conjunto de documentos, en este caso, canciones de Spotify, utilizando el algoritmo SPIMI (Single-pass in-memory indexing). Se usan las principales librerías
 ```
 import math
@@ -163,8 +164,11 @@ def score_documents(query, merged_index):
 
         terms_matched = sum([1 for term in query_terms if term in merged_index and doc_id in merged_index[term]["postings"]])  
         doc_scores[doc_id] *= terms_matched
-
     return doc_scores
 ```
+![Estructura y Ejecución del índice]()
+### INDICE INVERTIDO POSTGRES SQL
+
+### FLASK API
 
 
