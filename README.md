@@ -278,7 +278,7 @@ def invert_index():
     return jsonify(results_list)
 ```
 Este endpoint espera una petición POST con un cuerpo que contiene un query_text y un top_k. Primero, se procesa el query_text utilizando la función preprocess_text del módulo indice. Luego, se llama a la función retrieve_top_k del mismo módulo para obtener los top_k resultados más relevantes. Los resultados se convierten a un formato de lista de diccionarios. Finalmente, se devuelve la lista de resultados en formato JSON.
-![Estructura y Ejecución del índice](info-retrieval/public/consulta2.png)
+
 Ruta de PostgreSQL:
 ```
 @app.route('/psql', methods=['POST'])
@@ -294,8 +294,9 @@ def psql():
     return jsonify(results)
 ```
 Este endpoint también espera una petición POST con un cuerpo que contiene un query_text y un top_k. Se establece una conexión con la base de datos utilizando la función connect del módulo database. Se utiliza la función search del módulo database para buscar en la base de datos y obtener resultados. Una vez obtenidos los resultados, se cierra la conexión con la base de datos. Los resultados se devuelven en formato JSON.
+
 Prueba en postman:
-![Estructura y Ejecución del índice](info-retrieval/public/consulta2.png)![Estructura y Ejecución del índice](info-retrieval/public/consulta.png)
+![Estructura y Ejecución del índice](info-retrieval/public/consulta.png)
 
 ### FrontEnd
 ![Estructura y Ejecución del índice](info-retrieval/public/front.png)
