@@ -171,5 +171,6 @@ def score_documents(query, merged_index):
 ### INDICE INVERTIDO POSTGRES SQL
 
 ### FLASK API
-
+### FrontEnd(Avance)
+![https://cdn.discordapp.com/attachments/1141783340421238894/1169530903358357605/image.png?ex=6555bd88&is=65434888&hm=a15eb1e3c37de21a13361369a165b385ef4a7c89261456793c41f9496dac4e37&] ![https://cdn.discordapp.com/attachments/1141783340421238894/1169530903672922112/image.png?ex=6555bd88&is=65434888&hm=81c29a5c682fc79ed8f20a14844dda1b7e74385d0e467db0cd018cf4c6cf8eb5&]
 
