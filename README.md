@@ -298,7 +298,7 @@ Este endpoint también espera una petición POST con un cuerpo que contiene un q
 Prueba en postman:
 ![Estructura y Ejecución del índice](info-retrieval/public/consulta.png)
 
-### FrontEnd
+## FrontEnd
 ![Estructura y Ejecución del índice](info-retrieval/public/front.png)
 
 ![Estructura y Ejecución del índice](info-retrieval/public/front2.png)
