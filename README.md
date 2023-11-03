@@ -166,6 +166,7 @@ def score_documents(query, merged_index):
         doc_scores[doc_id] *= terms_matched
     return doc_scores
 ```
+### Estructura y Ejecución del índice
 ![Estructura y Ejecución del índice](info-retrieval/public/indice.jpeg)
 ### INDICE INVERTIDO POSTGRES SQL
 
