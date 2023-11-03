@@ -169,9 +169,84 @@ def score_documents(query, merged_index):
 ### Estructura y Ejecución del índice
 ![Estructura y Ejecución del índice](info-retrieval/public/indice.jpeg)
 ### INDICE INVERTIDO POSTGRES SQL
+- Se crea una tabla llamada songslist con múltiples campos, que incluyen detalles de la canción, el álbum, la lista de reproducción, características de la canción y más.
+Población de Datos:
 
+- Se usa el comando COPY para insertar datos de un archivo CSV (spotify.csv) en la tabla songslist.
+Columna combined_text:
+
+- Se añade una columna llamada combined_text, que combinara el contenido de todas las otras columnas en una sola columna de texto.
+Conversión a tsvector:
+
+- La columna full_text se crea y se rellena con el contenido de combined_text convertido a tsvector. El tipo tsvector es un tipo de datos específico de PostgreSQL utilizado para representar documentos en un formato que se puede buscar con índices invertidos. Aquí, setweight se usa para asignar un peso específico a los vectores, lo que puede influir en la clasificación de los resultados de búsqueda.
+- Creación del Índice:
+
+    - Se crea un índice usando la extensión gin (Generalized Inverted Index) en la columna combined_text. Esto permite búsquedas rápidas de texto completo en la columna combined_text
+```
+CREATE TABLE IF NOT EXISTS songslist (
+    track_id VARCHAR(255) PRIMARY KEY,
+    track_name VARCHAR(255),
+    track_artist VARCHAR(255),
+    lyrics TEXT,
+    track_popularity INTEGER,
+    track_album_id VARCHAR(255),
+    ... Demas campos
+);
+COPY songslist(track_id, track_name, track_artist, lyrics, track_popularity, track_album_id, track_album_name, track_album_release_date, playlist_name, playlist_id, playlist_genre, playlist_subgenre, danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, language)
+FROM 'E:\BD2\PROYECTO2\Proyecto-BD2-2\backend\spotify.csv' DELIMITER ',' CSV HEADER;
+ALTER TABLE songslist ADD COLUMN combined_text TEXT;
+UPDATE songslist
+SET combined_text = 
+    COALESCE(track_id, '') || ' ' ||
+    COALESCE(track_name, '') || ' ' ||
+    COALESCE(track_artist, '') || ' ' ||
+    COALESCE(lyrics, '') || ' ' ||
+    COALESCE(track_popularity::TEXT, '') || ' ' ||
+    COALESCE(track_album_id, '') || ' ' ||
+    COALESCE(track_album_name, '') || ' ' ||
+    ... Demas campos
+UPDATE songslist
+SET combined_text = TRIM(BOTH ' ' FROM combined_text);
+ALTER TABLE songslist ADD COLUMN full_text tsvector;
+UPDATE songslist SET full_text = T.full_text
+FROM (
+    SELECT track_id, setweight(to_tsvector('english', combined_text), 'A') AS full_text
+    FROM songslist
+) T
+WHERE T.track_id = songslist.track_id;
+CREATE INDEX text_search_idx ON songslist USING gin(combined_text gin_trgm_ops);
+SELECT track_id, track_artist, lyrics, ts_rank_cd(full_text, query) AS rank
+FROM songslist, to_tsquery('english', 'Don|Omar') query
+WHERE query @@ full_text
+ORDER BY rank ASC
+LIMIT 100;
+```
+La función de búsqueda toma una consulta Q y un número k para devolver los k resultados superiores basados en la coincidencia de texto completo. La consulta se divide y se reformatea para adaptarse a la función to_tsquery. La consulta SQL busca coincidencias en la columna full_text y devuelve artistas, nombres de canciones y una puntuación de coincidencia (rank).
+```
+def search(Q, k):
+    query = Q.split(" ")
+    query = '|'.join(query)
+    top_k = k
+    start = time.time()
+    cur.execute(f"""
+        SELECT track_artist, track_name, ts_rank_cd(full_text, query, 1) AS rank
+        FROM songslist, to_tsquery('english', '{query}') query
+        WHERE query @@ full_text
+        ORDER BY rank ASC
+        LIMIT {top_k};
+    """)
+
+    end = time.time()
+    result = cur.fetchall()
+    conn.commit()
+    conn.close()
+    for row in result:
+        print(row)
+    print("Tiempo de ejecucion :",
+          (end - start) * 10 ** 3, "ms")
+```
 ### FLASK API
-### FrontEnd(Avance)
+### FrontEnd
 ![Estructura y Ejecución del índice](info-retrieval/public/front.png)
 
 ![Estructura y Ejecución del índice](info-retrieval/public/front2.png)
