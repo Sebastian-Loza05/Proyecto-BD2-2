@@ -83,3 +83,77 @@ def generate_tfw(docs):
     print(block_num, indice)
     return indice
 ```
+### MERGE
+La función merge_blocks es la responsable de fusionar bloques más pequeños del índice invertido en un índice invertido más grande. Las listas de publicaciones de términos coincidentes en diferentes bloques se combinan para crear una única lista de publicaciones para ese término en el nuevo índice invertido fusionado. Después de fusionar dos bloques de índices invertidos, se eliminan los archivos originales para conservar espacio y evitar confusiones.
+```
+def merge_blocks(indices):
+    new_inv_idx = {}
+    for i in range(indices):
+        inv_index1 = {}
+        with open(f"indices/indice_invertido{i}.pkl", "rb") as file:
+            inv_index1 = pickle.load(file)
+            json_index1 = json.dumps(inv_index1, indent=3)
+        if os.path.exists(f"indices/indice_invertido{i}.pkl"):
+            print("eiminando")
+            os.remove(f"indices/indice_invertido{i}.pkl")
+        for j in range(i):
+            inv_index2 = {}
+            with open(f"indices/indice_invertido{j}.pkl", "rb") as file:
+                inv_index2 = pickle.load(file)
+                json_index2 = json.dumps(inv_index2, indent=3)
+            if os.path.exists(f"indices/indice_invertido{j}.pkl"):
+                print("eiminando")
+                os.remove(f"indices/indice_invertido{j}.pkl")
+            w = 0
+            for x in range(len(inv_index1.keys())):
+                term1 = inv_index1.keys()[x]
+                term2 = inv_index2.keys()[w]
+                if term1 < term2:
+                    new_inv_idx[term1] = inv_index1[term1]
+                elif term1 > term2:
+                    new_inv_idx[term2] = inv_index2[term2]
+                    w += 1
+                else:
+                    new_inv_idx[term1] = [
+                        inv_index1[term1][0] + inv_index2[term2][0],
+                        inv_index2[term2][1]
+                    ]
+                    w += 1
+                    bloque1 = inv_index1[term1][1]
+                    bloque2 = inv_index2[term2][1]
+                    postings1 = {}
+                    postings2 = {}
+                    with open(f"blocks/bloque{bloque1}", 'rb') as posting1, open(f"blocks/bloque{bloque2}", 'rb') as posting2:
+                        postings1 = pickle.load(posting1)
+                        postings2 = pickle.load(posting2)
+                    del postings1['next']
+                    postings3 = {**postings2, **postings1}
+```
+
+### SIMILITUD COSENO
+El método score_documents toma como parámetros una consulta (query) y un índice invertido fusionado (merged_index). Luego, se divide la consulta en términos individuales y se inicializa un diccionario doc_scores para almacenar los scores de los documentos. Para cada término en la consulta, si el término está en el índice invertido, se itera a través de las listas de publicación (documentos que contienen el término) y se acumula el valor de TF-IDF para ese término en el score del documento.
+Luego, se normaliza el score del documento dividiendo el score acumulado por la longitud del documento. Finalmente, se multiplica el score del documento por la cantidad de términos de la consulta que coinciden con el documento. Esto es un factor adicional para aumentar el score de los documentos que contienen más términos de la consulta.
+```
+def score_documents(query, merged_index):
+    print("APLICANDO COSINE...")
+    query_terms = query.split()
+    doc_scores = defaultdict(float)
+
+    for term in query_terms:
+        if term in merged_index:
+            for doc_id, doc_data in merged_index[term]["postings"].items():
+                doc_weight = doc_data['tf-idf']
+                doc_scores[doc_id] += doc_weight
+
+    for doc_id, score in doc_scores.items():
+        doc_length = sum([doc_data['tf-idf']**2 for term in merged_index if doc_id in merged_index[term]["postings"]])**0.5  
+        if doc_length > 0:
+            doc_scores[doc_id] /= doc_length
+
+        terms_matched = sum([1 for term in query_terms if term in merged_index and doc_id in merged_index[term]["postings"]])  
+        doc_scores[doc_id] *= terms_matched
+
+    return doc_scores
+```
+
+
