@@ -51,6 +51,13 @@ def preprocess_text(text):
 
 ### SPIMI
 La función spimi_invert construye índices invertidos en bloques utilizando el algoritmo SPIMI. Esta función toma como entrada la lista de documentos y, para cada documento, construye una lista de términos (o tokens) y su frecuencia de aparición. Los bloques de índice invertido se escriben en el disco cuando se alcanza un límite específico de memorias definido por page_size.
+Se inicializan variables para mantener el índice invertido (inv_index), las listas de publicaciones (posting_lists), y otros contadores.
+Se itera sobre cada documento en docs:
+    - Para cada documento, se cuentan las ocurrencias de cada término usando la clase Counter.
+    - Luego, para cada término y su frecuencia en el documento:
+Se verifica si el tamaño total de inv_index y posting_lists cuando se convierten a formato pickle supera el page_size. Si es así, se escribe el contenido actual de inv_index y posting_lists en el disco y se reinician estas estructuras.
+    - Luego, se verifica si el término ya está en el índice invertido. Si no está, se añade al índice y se crea una nueva lista de publicaciones para ese término. Si ya está, se actualiza la lista de publicaciones con la frecuencia del término para el documento actual.
+Al final de la función, se devuelve el contador indice, que representa la cantidad total de índices o bloques generados.
 ```
 def generate_tfw(docs):
     inv_index = {}
