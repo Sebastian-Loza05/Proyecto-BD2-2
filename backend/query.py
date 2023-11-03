@@ -48,7 +48,7 @@ def get_idf(bloque, cantDocuments):
         next = dic_blocks['next']
     return math.log10(cantDocuments, tam)
 
-def binary_recollection(cantarchivos, cantbloques, word, cantDocuments):
+def binary_recollection(cantarchivos, word, cantDocuments):
     # indiceinvertido 0 -> 1
     # bloque 0 -> 1
     left = 0
@@ -79,14 +79,14 @@ def get_tfidf(bloque, i_doc):
 
     return 0
 
-def documentos_topK(query, topk, cantarchivos, cantbloques, cantDocuments, norma_doc):
+def documentos_topK(query, topk, cantarchivos, cantDocuments, norma_doc):
     query_frecuency = wtf_query(query)
     print(query_frecuency)
     query = {}
     datos = []
     norm_query = 0
     for i in query_frecuency.keys():
-        bloque, query_idf = binary_recollection(cantarchivos, cantbloques, i)
+        bloque, query_idf = binary_recollection(cantarchivos, i)
         if bloque != -1:
             datos.append(bloque)
             query[i] = query[i] * query_idf
