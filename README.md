@@ -172,7 +172,7 @@ def score_documents(query, merged_index):
 
 ### FLASK API
 ### FrontEnd(Avance)
-![Estructura y Ejecución del índice](info-retrieval/public/ifront.png)
+![Estructura y Ejecución del índice](info-retrieval/public/front.png)
 
 ![Estructura y Ejecución del índice](info-retrieval/public/front2.png)
 
