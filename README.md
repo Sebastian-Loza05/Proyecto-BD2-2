@@ -95,7 +95,7 @@ def generate_tfw(docs):
     print(block_num, indice)
     return indice
 ```
-### MERGE
+### Merge
 La función merge_blocks es la responsable de fusionar bloques más pequeños del índice invertido en un índice invertido más grande. Las listas de publicaciones de términos coincidentes en diferentes bloques se combinan para crear una única lista de publicaciones para ese término en el nuevo índice invertido fusionado. Después de fusionar dos bloques de índices invertidos, se eliminan los archivos originales para conservar espacio y evitar confusiones.
 ```
 def merge_blocks(indices):
@@ -142,7 +142,7 @@ def merge_blocks(indices):
                     postings3 = {**postings2, **postings1}
 ```
 
-### SIMILITUD COSENO
+### Similitud Coseno
 El método score_documents toma como parámetros una consulta (query) y un índice invertido fusionado (merged_index). Luego, se divide la consulta en términos individuales y se inicializa un diccionario doc_scores para almacenar los scores de los documentos. Para cada término en la consulta, si el término está en el índice invertido, se itera a través de las listas de publicación (documentos que contienen el término) y se acumula el valor de TF-IDF para ese término en el score del documento.
 Luego, se normaliza el score del documento dividiendo el score acumulado por la longitud del documento. Finalmente, se multiplica el score del documento por la cantidad de términos de la consulta que coinciden con el documento. Esto es un factor adicional para aumentar el score de los documentos que contienen más términos de la consulta.
 ```
@@ -168,7 +168,7 @@ def score_documents(query, merged_index):
 ```
 ### Estructura y Ejecución del índice
 ![Estructura y Ejecución del índice](info-retrieval/public/indice.jpeg)
-### INDICE INVERTIDO POSTGRES SQL
+### Indice en PostgresSQL
 - Se crea una tabla llamada songslist con múltiples campos, que incluyen detalles de la canción, el álbum, la lista de reproducción, características de la canción y más.
 Población de Datos:
 
@@ -246,6 +246,57 @@ def search(Q, k):
           (end - start) * 10 ** 3, "ms")
 ```
 ### FLASK API
+El archivo views.py es una parte central de la aplicación Flask que se encarga de definir y manejar las rutas o endpoints a los que se puede acceder. Estos endpoints permiten realizar con un índice invertido y una base de datos PostgreSQL. 
+Importaciones:
+- Flask: Se importan las funciones request y jsonify de Flask. request permite acceder a los datos enviados por el cliente, mientras que jsonify facilita la devolución de respuestas en formato JSON.
+- app: Se importa la instancia de Flask (app) desde el módulo app.
+- indice: Este módulo contiene funciones relacionadas con el índice invertido.
+- database: Este módulo tiene funciones para interactuar con una base de datos PostgreSQL.
+La conexión a PostgresSQL se hace usando Pyscopg2
+```
+import psycopg2
+import time
+conn = psycopg2.connect(
+    host="localhost",
+    database="BD2Proyecto2",
+    user=
+    port = 5432,
+    password=
+
+cur = conn.cursor()
+```
+Endpoints:
+```
+@app.route('/invert_index', methods=['POST'])
+def invert_index():
+    query_text = request.json.get('query_text')
+    top_k = int(request.json.get('top_k'))
+    query_processed = indice.preprocess_text(query_text)
+    results = indice.retrieve_top_k(query_processed, top_k, indice.merged_index, indice.num_docs)
+    results_list = results.to_dict(orient='records')
+    print("Llamado a Indice") 
+    return jsonify(results_list)
+```
+Este endpoint espera una petición POST con un cuerpo que contiene un query_text y un top_k. Primero, se procesa el query_text utilizando la función preprocess_text del módulo indice. Luego, se llama a la función retrieve_top_k del mismo módulo para obtener los top_k resultados más relevantes. Los resultados se convierten a un formato de lista de diccionarios. Finalmente, se devuelve la lista de resultados en formato JSON.
+![Estructura y Ejecución del índice](info-retrieval/public/consulta2.png)
+Ruta de PostgreSQL:
+```
+@app.route('/psql', methods=['POST'])
+def psql():
+    data = request.get_json()
+    query = data["query_text"]
+    top_k = int(data["top_k"])
+
+    conn = database.connect() 
+    results = database.search(conn, query, top_k)  
+    conn.close()
+    print("Llamado a PSQL") 
+    return jsonify(results)
+```
+Este endpoint también espera una petición POST con un cuerpo que contiene un query_text y un top_k. Se establece una conexión con la base de datos utilizando la función connect del módulo database. Se utiliza la función search del módulo database para buscar en la base de datos y obtener resultados. Una vez obtenidos los resultados, se cierra la conexión con la base de datos. Los resultados se devuelven en formato JSON.
+Prueba en postman:
+![Estructura y Ejecución del índice](info-retrieval/public/consulta2.png)![Estructura y Ejecución del índice](info-retrieval/public/consulta.png)
+
 ### FrontEnd
 ![Estructura y Ejecución del índice](info-retrieval/public/front.png)
 
