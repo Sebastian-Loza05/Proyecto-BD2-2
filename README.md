@@ -33,7 +33,7 @@ nltk.download('stopwords')
 nltk.download('punkt')
 ```
 ### Preprocesamiento de texto
-Se establecen stopwords en inglés y español, además de stemmers para procesar el texto y dejarlo en un formato estandarizado. La función preprocess_text lleva a cabo este proceso.
+Se establecen stopwords en inglés y español, además de stemmers para procesar el texto y dejarlo en un formato estandarizado. La función preprocess_text lleva a cabo este proceso. La función devuelve el texto preprocesado como una cadena de caracteres con tokens separados por espacios. Se aplica Stemming que es una técnica de procesamiento del lenguaje natural que se utiliza para reducir las palabras a su raíz o forma base. Por ejemplo, "running" se convierte en "run". 
 ```
 stop_words = set(stopwords.words('english')).union(set(stopwords.words('spanish')))
 block_num = 0
