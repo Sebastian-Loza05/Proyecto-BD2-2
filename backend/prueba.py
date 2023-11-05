@@ -14,12 +14,13 @@ import json
 nltk.download('stopwords')
 
 page_size = 200
-lista_tam = 100
+lista_tam = 2
 stop_words = set(stopwords.words('english')).union(set(stopwords.words('spanish')))
 block_num = 0
 stemmer_english = SnowballStemmer('english')
 stemmer_spanish = SnowballStemmer('spanish')
-
+cantidadDocs = 25
+norma = []
 
 def score_tf(tf):
     return 1 + math.log10(tf) if tf > 0 else 0
@@ -53,6 +54,7 @@ def write_to_disk(inv_index, postings, indice, last_block_num):
             pickle.dump(postings[i], file)
 
 def generate_tfw(docs):
+    borrar_archivos_previos()
     inv_index = {}
     posting_lists = []
     block_num = 0
@@ -86,17 +88,28 @@ def generate_tfw(docs):
     return indice, block_num
 
 def escrituraBlock(cantbloques, data, key1, key2):
-    tam = len(data) - lista_tam
+    tam = len(data)
+    result = {'next': -1}
+    while tam > lista_tam:
+        for key in data.keys():
+            if key != 'next':
+                if len(result) + 1 > lista_tam:
+                    result['next'] = cantbloques
+                    with open(f"blocks/bloque{key1}.pkl", 'wb') as file:
+                        pickle.dump(result, file)
+                    result.clear()
+                    key1 = cantbloques
+                    cantbloques += 1
+                    result['next'] = -1
+                    result[key] = data[key]
+                    tam -= 1
+                else:
+                    result[key] = data[key]
+                    tam -= 1
+
     with open(f"blocks/bloque{key1}.pkl", 'wb') as file:
-        pickle.dump(dict(data[:len(data) - tam]), file)
-    if tam > lista_tam:
-        cantbloques += 1
-        escrituraBlock(cantbloques, data, cantbloques, cantbloques + 1)
-        return cantbloques
-
-    with open(f"blocks/bloque{key2}.pkl", 'wb') as file:
-        pickle.dump(dict(data[len(data) - tam:]), file)
-
+        pickle.dump(result, file)
+    # os.remove(f"blocks/bloque{key2}.pkl")
     return cantbloques
 
 
@@ -110,14 +123,11 @@ def combined(result, key, elemento1, elemento2, cantbloques):
         data2 = pickle.load(file)
     data1 = {**data1, **data2}
 
-    data1 = list(data1.items())
-
     if len(data1) > lista_tam:
         cantbloques = escrituraBlock(cantbloques, data1, elemento1[1], elemento2[1])
     else:
         with open(f"blocks/bloque{elemento1[1]}.pkl", 'wb') as file:
-            pickle.dump(dict(data1), file)
-        os.remove(f"blocks/bloque{elemento2[1]}.pkl")
+            pickle.dump(data1, file)
 
     result[key][1] = elemento1[1]
     return cantbloques
@@ -125,6 +135,14 @@ def combined(result, key, elemento1, elemento2, cantbloques):
 def borrar_archivos_previos():
     for elemento in os.listdir("indicesF"):
         elemento_r = os.path.join("indicesF", elemento)
+        os.remove(elemento_r)
+
+    for elemento in os.listdir("blocks"):
+        elemento_r = os.path.join("blocks", elemento)
+        os.remove(elemento_r)
+
+    for elemento in os.listdir("indices"):
+        elemento_r = os.path.join("indices", elemento)
         os.remove(elemento_r)
 
 def print_all():
@@ -190,8 +208,39 @@ def merge_interno(espacio_act, indice_act, cantbloques):
 
     return i, espacio_act, cantbloques
 
-def merge_blocks1(indices, cantbloques):
-    borrar_archivos_previos()
+def actualizar_block(bloque, idf, norma):
+    with open(f"blocks/bloque{bloque}.pkl", "rb") as file:
+        data = pickle.load(file)
+
+    for key in data.keys():
+        if key != 'next':
+            data[key] = data[key] * idf
+            norma[key] += data[key] ** 2
+
+    if data['next'] != -1:
+        actualizar_block(data['next'], idf, norma)
+    # print(data)
+
+    with open(f"blocks/bloque{bloque}.pkl", 'wb') as file:
+        pickle.dump(data, file)
+
+def actualizar_tf_idf(N, norma):
+    indice_archivos = 0
+    while os.path.exists(f"indicesF/indice_invertido{indice_archivos}.pkl"):
+        with open(f"indicesF/indice_invertido{indice_archivos}.pkl", "rb") as file:
+            dic_indic_disk = pickle.load(file)
+
+        for key, valor in dic_indic_disk.items():
+            idf = score_idf(N, valor[0])
+            dic_indic_disk[key][0] = idf
+            actualizar_block(dic_indic_disk[key][1], idf, norma)
+
+        with open(f"indicesF/indice_invertido{indice_archivos}.pkl", 'wb') as file:
+            pickle.dump(dic_indic_disk, file)
+
+        indice_archivos += 1
+
+def merge_blocks1(indices, cantbloques, norma):
     indice_act = 0
 
     while indice_act != indices:
@@ -207,59 +256,114 @@ def merge_blocks1(indices, cantbloques):
         os.remove(f"indices/indice_invertido{indice_act}.pkl")
         indice_act += 1
 
-    print_all()
+    norma = [0] * cantidadDocs
+    actualizar_tf_idf(cantidadDocs, norma)
+    norma = [math.sqrt(norma[i]) for i in range(cantidadDocs)]
+    # print(norma)
+    # print_all()
+    return norma, indice_fin
 
-def merge_blocks(indices):
-    new_inv_idx = {}
-    for i in range(indices):
-        inv_index1 = {}
-        with open(f"indices/indice_invertido{i}.pkl", "rb") as file:
-            inv_index1 = pickle.load(file)
-            json_index1 = json.dumps(inv_index1, indent=3)
-        if os.path.exists(f"indices/indice_invertido{i}.pkl"):
-            print("eiminando")
-            os.remove(f"indices/indice_invertido{i}.pkl")
-        print(i, ": \n", json_index1)
-        for j in range(i):
-            inv_index2 = {}
-            with open(f"indices/indice_invertido{j}.pkl", "rb") as file:
-                inv_index2 = pickle.load(file)
-                json_index2 = json.dumps(inv_index2, indent=3)
-            if os.path.exists(f"indices/indice_invertido{j}.pkl"):
-                print("eiminando")
-                os.remove(f"indices/indice_invertido{j}.pkl")
-            print(j, ": \n", json_index2)
-            w = 0
-            for x in range(len(inv_index1.keys())):
-                term1 = inv_index1.keys()[x]
-                term2 = inv_index2.keys()[w]
-                if term1 < term2:
-                    new_inv_idx[term1] = inv_index1[term1]
-                elif term1 > term2:
-                    new_inv_idx[term2] = inv_index2[term2]
-                    w += 1
-                else:
-                    new_inv_idx[term1] = [
-                        inv_index1[term1][0] + inv_index2[term2][0],
-                        inv_index2[term2][1]
-                    ]
-                    w += 1
-                    bloque1 = inv_index1[term1][1]
-                    bloque2 = inv_index2[term2][1]
-                    postings1 = {}
-                    postings2 = {}
-                    with open(f"blocks/bloque{bloque1}", 'rb') as posting1, open(f"blocks/bloque{bloque2}", 'rb') as posting2:
-                        postings1 = pickle.load(posting1)
-                        postings2 = pickle.load(posting2)
-                    print(postings1)
-                    print(postings2)
-                    del postings1['next']
-                    postings3 = {**postings2, **postings1}
+def wtf_query(textQuery):
+    tokens = preprocess_text(textQuery)
+    query_frecuency = {}
+    for i in tokens.split(' '):
+        if i not in query_frecuency:
+            query_frecuency[i] = 1
+        else:
+            query_frecuency[i] += 1
+    for term, tf in query_frecuency.items():
+        query_frecuency[term] = score_tf(tf)
 
+    return query_frecuency
 
+def get_idf(bloque, cantDocuments):
+    tam = 0
+    next = bloque
+    while next != -1:
+        # print("Next: ", next)
+        with open('blocks/bloque' + str(next) + '.pkl', 'rb') as blocks:
+            dic_blocks = pickle.load(blocks)
+        tam += len(dic_blocks)
+        next = dic_blocks['next']
+    return math.log10(cantDocuments / tam)
+
+def binary_recollection(cantarchivos, word, cantDocuments):
+    # indiceinvertido 0 -> 1
+    # bloque 0 -> 1
+    left = 0
+    right = cantarchivos - 1
+    while left <= right:
+        half = (left + right) // 2
+        with open('indicesF/indice_invertido' + str(half ) + '.pkl', 'rb') as mini_dic:
+            dic_keys = pickle.load(mini_dic)
+
+        if word in dic_keys:
+            print(dic_keys)
+            return dic_keys[word]
+        elif next(iter(dic_keys)) < word:
+            left = half + 1
+        else:
+            right = half - 1
+
+    return -1, -1
+
+def get_tfidf(bloque, i_doc):
+    next = bloque
+    while next != 1:
+        with open('blocks/bloque' + next + '.pkl', 'rb') as blocks:
+            dic_blocks = pickle.load(blocks)
+
+        if i_doc in dic_blocks:
+            return dic_blocks[i_doc]
+        next = dic_blocks['next']
+
+    return 0
+
+def documentos_topK(query, topk, cantarchivos, cantDocuments, norma_doc):
+    query_frecuency = wtf_query(query)
+    norm_query = 0
+    for i in query_frecuency.keys():
+        idf_palabra_bloque = binary_recollection(cantarchivos, i, cantDocuments)
+        query_frecuency[i] = [query_frecuency[i] * idf_palabra_bloque[0], idf_palabra_bloque[1]]
+    print("query:", query_frecuency)
+
+    docs = {}
+    for key in query_frecuency.keys():
+        norm_query += query_frecuency[key][0]**2
+        next = query_frecuency[key][1]
+        while next != -1:
+            with open(f"blocks/bloque{next}.pkl", 'rb') as file:
+                data_blocks = pickle.load(file)
+
+            for key_ in data_blocks.keys():
+                if key_ != 'next':
+                    if data_blocks[key_] in docs:
+                        docs[key_] += query_frecuency[key][0] * data_blocks[key_]
+                    else:
+                        docs[key_] = query_frecuency[key][0] * data_blocks[key_]
+
+            next = data_blocks['next']
+
+    for key in docs.keys():
+        docs[key] = (math.sqrt(docs[key])) / (math.sqrt(norm_query) * math.sqrt(norma_doc[key]))
+
+    print("---", docs)
+    resultado = dict(sorted(docs.items(), key=lambda item: item[1]))
+
+    contador = 0
+    topkDocuments = []
+    for i in resultado.keys():
+        topkDocuments.append(i)
+        contador += 1
+        if contador == topk:
+            break
+
+    return topkDocuments
 canciones = load_full_dataframe()
 docs = canciones['processed_text'].tolist()
 indices, cantbloques = generate_tfw(docs)
-print(indices, cantbloques)
-merge_blocks1(indices, cantbloques)
+print("->", indices, cantbloques)
+norma, indicesF = merge_blocks1(indices, cantbloques, norma)
+print("-->", indicesF)
+print(documentos_topK("los lobos no podian distinguir la noche", 10, indicesF, cantidadDocs, norma))
 #
