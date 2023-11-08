@@ -28,5 +28,5 @@ def search(conn, Q, k):
     result = [dict(zip(columns, row)) for row in rows]  # Esto convierte las filas en diccionarios
 
     cur.close()
-    
+
     return result

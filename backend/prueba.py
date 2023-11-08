@@ -13,14 +13,24 @@ import json
 
 nltk.download('stopwords')
 
-page_size = 200
-lista_tam = 2
+page_size = 500
+lista_tam = 19
 stop_words = set(stopwords.words('english')).union(set(stopwords.words('spanish')))
 block_num = 0
 stemmer_english = SnowballStemmer('english')
 stemmer_spanish = SnowballStemmer('spanish')
 cantidadDocs = 25
 norma = []
+CANT_INDICES = 0
+
+def print_indice():
+    global CANT_INDICES
+    for i in range(CANT_INDICES):
+        with open(f"indicesF/indice_invertido{i}.pkl", 'rb') as file:
+            indice = pickle.load(file)
+            indice_bonito = json.dumps(indice, indent=4)
+        print(indice_bonito)
+
 
 def score_tf(tf):
     return 1 + math.log10(tf) if tf > 0 else 0
@@ -84,6 +94,7 @@ def generate_tfw(docs):
             else:
                 posting_lists[inv_index[term][1] - last_block_num][doc_id] = score_tf(freq)
                 inv_index[term][0] += 1
+    print("Cantidad de indices: ", indice)
     print(block_num, indice)
     return indice, block_num
 
@@ -109,12 +120,15 @@ def escrituraBlock(cantbloques, data, key1, key2):
 
     with open(f"blocks/bloque{key1}.pkl", 'wb') as file:
         pickle.dump(result, file)
+    if key1 == key2:
+        print("Son igualesssssssssss")
     # os.remove(f"blocks/bloque{key2}.pkl")
     return cantbloques
 
 
 def combined(result, key, elemento1, elemento2, cantbloques):
     # print("-------------------------->Enter", elemento1, elemento2)
+    result[key] = [0, 0]
     result[key][0] = elemento1[0] + elemento2[0]
 
     with open(f"blocks/bloque{elemento1[1]}.pkl", 'rb') as file:
@@ -128,6 +142,7 @@ def combined(result, key, elemento1, elemento2, cantbloques):
     else:
         with open(f"blocks/bloque{elemento1[1]}.pkl", 'wb') as file:
             pickle.dump(data1, file)
+        # os.remove(f"blocks/bloque{elemento2[1]}.pkl")
 
     result[key][1] = elemento1[1]
     return cantbloques
@@ -153,15 +168,17 @@ def print_all():
         print(f"i{i}", ":", dic_)
         i += 1
 
-def merge_interno(espacio_act, indice_act, cantbloques):
+def merge_interno(espacio_act, indice_act, cantbloques):  # el primer índice, 0, 294
     i = 0
     result = {}
     indice_archivos = 0
+    # print("Numero de indice: ", indice_act)
+    # print("indice mergeando: ", espacio_act)
     while os.path.exists(f"indicesF/indice_invertido{indice_archivos}.pkl") and i < indice_act:
         # print("i", i)
-        # input("")
         with open(f"indicesF/indice_invertido{i}.pkl", "rb") as file:
             dic_indic_disk = pickle.load(file)
+        # print("indice_disco: ", dic_indic_disk)
 
         # print("Act1", espacio_act)
         # print("Act2", dic_indic_disk)
@@ -242,13 +259,13 @@ def actualizar_tf_idf(N, norma):
 
 def merge_blocks1(indices, cantbloques, norma):
     indice_act = 0
+    # print("indices: ", indices)
 
     while indice_act != indices:
         with open(f"indices/indice_invertido{indice_act}.pkl", "rb") as file:
             espacio1 = pickle.load(file)
-        # print("Inicio", espacio1)
-        indice_fin, espacio1, cantbloques = merge_interno(espacio1, indice_act, cantbloques)
 
+        indice_fin, espacio1, cantbloques = merge_interno(espacio1, indice_act, cantbloques)
         # print("---->", indice_fin, espacio1)
         with open(f"indicesF/indice_invertido{indice_fin}.pkl", "wb") as file:
             pickle.dump(espacio1, file)
@@ -261,6 +278,9 @@ def merge_blocks1(indices, cantbloques, norma):
     norma = [math.sqrt(norma[i]) for i in range(cantidadDocs)]
     # print(norma)
     # print_all()
+
+    global CANT_INDICES
+    CANT_INDICES = indice_fin
     return norma, indice_fin
 
 def wtf_query(textQuery):
@@ -294,7 +314,7 @@ def binary_recollection(cantarchivos, word, cantDocuments):
     right = cantarchivos - 1
     while left <= right:
         half = (left + right) // 2
-        with open('indicesF/indice_invertido' + str(half ) + '.pkl', 'rb') as mini_dic:
+        with open('indicesF/indice_invertido' + str(half) + '.pkl', 'rb') as mini_dic:
             dic_keys = pickle.load(mini_dic)
 
         if word in dic_keys:
@@ -359,11 +379,15 @@ def documentos_topK(query, topk, cantarchivos, cantDocuments, norma_doc):
             break
 
     return topkDocuments
+
+
 canciones = load_full_dataframe()
 docs = canciones['processed_text'].tolist()
 indices, cantbloques = generate_tfw(docs)
 print("->", indices, cantbloques)
 norma, indicesF = merge_blocks1(indices, cantbloques, norma)
 print("-->", indicesF)
+print("Indices")
+print_indice()
 print(documentos_topK("los lobos no podian distinguir la noche", 10, indicesF, cantidadDocs, norma))
 #

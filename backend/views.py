@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from app import app  
+from app import app
 import indice
 import database
 
@@ -16,7 +16,7 @@ def invert_index():
     query_processed = indice.preprocess_text(query_text)
     results = indice.retrieve_top_k(query_processed, top_k, indice.merged_index, indice.num_docs)
     results_list = results.to_dict(orient='records')
-    print("Llamado a Indice") 
+    print("Llamado a Indice")
     return jsonify(results_list)
 
 @app.route('/psql', methods=['POST'])
@@ -25,12 +25,13 @@ def psql():
     query = data["query_text"]
     top_k = int(data["top_k"])
 
-    conn = database.connect() 
-    results = database.search(conn, query, top_k)  
+    conn = database.connect()
+    results = database.search(conn, query, top_k)
     conn.close()
-    print("Llamado a PSQL") 
+    print("Llamado a PSQL")
     return jsonify(results)
 
 @app.route('/mongo', methods=['GET'])
 def mongo():
     return "Hello from mongo"
+
