@@ -168,3 +168,5 @@ backend/env
 backend/.env
 backend/indices
 backend/blocks
+backend/indicesF1
+backend/indicesF2
