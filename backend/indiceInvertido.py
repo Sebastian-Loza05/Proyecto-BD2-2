@@ -19,10 +19,10 @@ stemmer_english = SnowballStemmer('english')
 stemmer_spanish = SnowballStemmer('spanish')
 
 CANTIDAD_INDICES = 0
+CANTIDAD_DOCS = 28
 NORMA = []
-CANTIDAD_DOCS = 25
-RAM = 300
-MAX_POSTINGS_LENGHT = 4
+RAM = 3072
+MAX_POSTINGS_LENGHT = 40
 CARPETA = True
 
 def score_tf(tf):
@@ -42,7 +42,7 @@ def preprocess_text(text):
     return ' '.join(stemmed_tokens)
 
 def load_full_dataframe():
-    df = pd.read_csv('canciones.csv', on_bad_lines='skip')
+    df = pd.read_csv('spotify.csv', on_bad_lines='skip')
     df['combined_text'] = df.apply(lambda row: ' '.join(row.astype(str)), axis=1)
     df['processed_text'] = df['combined_text'].apply(preprocess_text)
     return df
@@ -185,11 +185,12 @@ def combine_indices(indice_mergeado, key, value_k1, value_k2):
     # print(f"{llave_bloque}: ", bloque2)
     # print(bloque)
     if len(bloque) > MAX_POSTINGS_LENGHT:
-        print("Excede")
+        # print("Excede")
         combine_blocks(bloque1, bloque2, value_k1[1], llave_bloque)
     else:
         with open(f"blocks/bloque{llave_bloque}.pkl", 'wb') as file:
             pickle.dump(bloque, file)
+        # print(f"Elimando bloque{value_k1[1]}")
         os.remove(f"blocks/bloque{value_k1[1]}.pkl")
 
 def merge_interno(indice_local, idx_actual, cantidad):
@@ -257,6 +258,39 @@ def merge_interno(indice_local, idx_actual, cantidad):
     # input()
     return indice_archivo + 1
 
+def actualizar_block(bloque, idf, norma):
+    with open(f"blocks/bloque{bloque}.pkl", "rb") as file:
+        data = pickle.load(file)
+
+    for key in data.keys():
+        if key != 'next':
+            data[key] = data[key] * idf
+            norma[key] += data[key] ** 2
+
+    if data['next'] != -1:
+        actualizar_block(data['next'], idf, norma)
+    # print(data)
+
+    with open(f"blocks/bloque{bloque}.pkl", 'wb') as file:
+        pickle.dump(data, file)
+
+def actualizar_tf_idf(norma):
+    indice_archivos = 0
+    carp = "F2" if CARPETA else "F1"
+    while os.path.exists(f"indices{carp}/indice_invertido{indice_archivos}.pkl"):
+        with open(f"indices{carp}/indice_invertido{indice_archivos}.pkl", "rb") as file:
+            dic_indic_disk = pickle.load(file)
+
+        for key, valor in dic_indic_disk.items():
+            idf = score_idf(CANTIDAD_DOCS, valor[0])
+            dic_indic_disk[key][0] = idf
+            actualizar_block(dic_indic_disk[key][1], idf, norma)
+
+        with open(f"indices{carp}/indice_invertido{indice_archivos}.pkl", 'wb') as file:
+            pickle.dump(dic_indic_disk, file)
+
+        indice_archivos += 1
+
 
 def merge(cantidad_bloques):
     global CANTIDAD_INDICES
@@ -266,20 +300,100 @@ def merge(cantidad_bloques):
     while idx_actual != CANTIDAD_INDICES:
         with open(f"indices/indice_invertido{idx_actual}.pkl", "rb") as file:
             indice_local = pickle.load(file)
-        print(indice_local)
+        # print(indice_local)
         cantidad = merge_interno(indice_local, idx_actual, cantidad)
         print(cantidad, idx_actual + 1)
         os.remove(f"indices/indice_invertido{idx_actual}.pkl")
         idx_actual += 1
         # print(indice_local)
+    global NORMA
     CANTIDAD_INDICES = cantidad
+    norma = [0] * CANTIDAD_DOCS
+    actualizar_tf_idf(norma)
+    norma = [math.sqrt(norma[i]) for i in range(CANTIDAD_DOCS)]
+    NORMA = norma
+    # print_indice()
+    print(norma)
+
+def wtf_query(textQuery):
+    tokens = preprocess_text(textQuery)
+    query_frecuency = {}
+    for i in tokens.split(' '):
+        if i not in query_frecuency:
+            query_frecuency[i] = 1
+        else:
+            query_frecuency[i] += 1
+    for term, tf in query_frecuency.items():
+        query_frecuency[term] = score_tf(tf)
+
+    return query_frecuency
+
+def binary_recollection(word):
+    # indiceinvertido 0 -> 1
+    # bloque 0 -> 1
+    carp = "F2" if CARPETA else "F1"
+    left = 0
+    right = CANTIDAD_INDICES - 1
+    while left <= right:
+        half = (left + right) // 2
+        with open(f'indices{carp}/indice_invertido' + str(half) + '.pkl', 'rb') as mini_dic:
+            dic_keys = pickle.load(mini_dic)
+
+        if word in dic_keys:
+            # print(dic_keys)
+            return dic_keys[word]
+        elif next(iter(dic_keys)) < word:
+            left = half + 1
+        else:
+            right = half - 1
+
+    return -1, -1
+
+def documentos_topK(query, topk):
+    query_frecuency = wtf_query(query)
+    norm_query = 0
+    for i in query_frecuency.keys():
+        idf_palabra_bloque = binary_recollection(i)
+        query_frecuency[i] = [query_frecuency[i] * idf_palabra_bloque[0], idf_palabra_bloque[1]]
+    # print("query:", query_frecuency)
+
+    docs = {}
+    for key in query_frecuency.keys():
+        norm_query += query_frecuency[key][0]**2
+        next = query_frecuency[key][1]
+        while next != -1:
+            with open(f"blocks/bloque{next}.pkl", 'rb') as file:
+                data_blocks = pickle.load(file)
+
+            for key_ in data_blocks.keys():
+                if key_ != 'next':
+                    if data_blocks[key_] in docs:
+                        docs[key_] += query_frecuency[key][0] * data_blocks[key_]
+                    else:
+                        docs[key_] = query_frecuency[key][0] * data_blocks[key_]
+
+            next = data_blocks['next']
+
+    for key in docs.keys():
+        docs[key] = (math.sqrt(docs[key])) / (math.sqrt(norm_query) * math.sqrt(NORMA[key]))
+
+    print("---", docs)
+    resultado = dict(sorted(docs.items(), key=lambda item: item[1]))
+
+    contador = 0
+    topkDocuments = []
+    for i in resultado.keys():
+        topkDocuments.append(i)
+        contador += 1
+        if contador == topk:
+            break
+
+    return topkDocuments
 
 
 # Main
 canciones = load_full_dataframe()
 docs = canciones['processed_text'].tolist()
-# print(docs)
 cantidad_bloques = generate_tfw(docs)
 merge(cantidad_bloques)
-# print(docs)
-print_indice()
+print(documentos_topK("trees, are singing in the wind ready", 10))
