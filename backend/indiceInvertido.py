@@ -18,12 +18,14 @@ block_num = 0
 stemmer_english = SnowballStemmer('english')
 stemmer_spanish = SnowballStemmer('spanish')
 
-CANTIDAD_INDICES = 0
-CANTIDAD_DOCS = 28
+CANTIDAD_INDICES = 18
+CANTIDAD_DOCS = 18454
+# CANTIDAD_DOCS = 28
 NORMA = []
-RAM = 3072
+RAM = 100000
 MAX_POSTINGS_LENGHT = 40
 CARPETA = True
+DF = pd.read_csv('spotify.csv', on_bad_lines='skip')
 
 def score_tf(tf):
     return 1 + math.log10(tf) if tf > 0 else 0
@@ -86,18 +88,21 @@ def write_to_disk(inv_index, postings, indice, last_block_num):
 
 def generate_tfw(docs):
     borrar_archivos_previos()
+    print("Eliminó todo")
     inv_index = {}
     posting_lists = []
     block_num = 0
     last_block_num = 0
     indice = 0
     bloque_simulado = {f'clave{i}': f'valor{i}' for i in range(MAX_POSTINGS_LENGHT)}
-
+    i = 0
     for doc_id, doc in enumerate(docs):
+        print(f"doc{doc_id}")
         terms = doc.split(' ')
         terms_counted = Counter(terms)
 
         for term, freq in terms_counted.items():
+            print(i, ": ", term)
             if term not in inv_index:
                 tam1 = len(pickle.dumps({**inv_index, term: [1, block_num]}))
                 tam2 = len(pickle.dumps(bloque_simulado))
@@ -114,6 +119,7 @@ def generate_tfw(docs):
             else:
                 posting_lists[inv_index[term][1] - last_block_num][doc_id] = score_tf(freq)
                 inv_index[term][0] += 1
+            i += 1
     global CANTIDAD_INDICES
     CANTIDAD_INDICES = indice
     print(block_num)
@@ -298,6 +304,7 @@ def merge(cantidad_bloques):
     cantidad = 0
     print(CANTIDAD_INDICES)
     while idx_actual != CANTIDAD_INDICES:
+        print(idx_actual)
         with open(f"indices/indice_invertido{idx_actual}.pkl", "rb") as file:
             indice_local = pickle.load(file)
         # print(indice_local)
@@ -312,6 +319,10 @@ def merge(cantidad_bloques):
     actualizar_tf_idf(norma)
     norma = [math.sqrt(norma[i]) for i in range(CANTIDAD_DOCS)]
     NORMA = norma
+    with open("norma.pkl", "wb") as file:
+        pickle.dump(NORMA, file)
+    NORMA.clear()
+    norma.clear()
     # print_indice()
     print(norma)
 
@@ -351,6 +362,9 @@ def binary_recollection(word):
 
 def documentos_topK(query, topk):
     query_frecuency = wtf_query(query)
+    global NORMA
+    with open("norma.pkl", "rb") as file:
+        NORMA = pickle.load(file)
     norm_query = 0
     for i in query_frecuency.keys():
         idf_palabra_bloque = binary_recollection(i)
@@ -359,7 +373,7 @@ def documentos_topK(query, topk):
 
     docs = {}
     for key in query_frecuency.keys():
-        norm_query += query_frecuency[key][0]**2
+        norm_query += (query_frecuency[key][0]**2)
         next = query_frecuency[key][1]
         while next != -1:
             with open(f"blocks/bloque{next}.pkl", 'rb') as file:
@@ -378,7 +392,7 @@ def documentos_topK(query, topk):
         docs[key] = (math.sqrt(docs[key])) / (math.sqrt(norm_query) * math.sqrt(NORMA[key]))
 
     print("---", docs)
-    resultado = dict(sorted(docs.items(), key=lambda item: item[1]))
+    resultado = dict(sorted(docs.items(), key=lambda item: item[1], reverse=True))
 
     contador = 0
     topkDocuments = []
@@ -390,10 +404,21 @@ def documentos_topK(query, topk):
 
     return topkDocuments
 
+def get_spotify_docs(query, topk):
+    docs = documentos_topK(query, topk)
+    results = []
+    for i in docs:
+        new = {}
+        new["nombre"] = DF.at[i, "track_name"]
+        new["artista"] = DF.at[i, "track_artist"]
+        new["letra"] = DF.at[i, "lyrics"]
+        results.append(new)
+    return results
+
 
 # Main
-canciones = load_full_dataframe()
-docs = canciones['processed_text'].tolist()
-cantidad_bloques = generate_tfw(docs)
-merge(cantidad_bloques)
-print(documentos_topK("trees, are singing in the wind ready", 10))
+# canciones = load_full_dataframe()
+# docs = canciones['processed_text'].tolist()
+# cantidad_bloques = generate_tfw(docs)
+# merge(cantidad_bloques)
+# print(documentos_topK("I'm trying to reach goals", 10))
