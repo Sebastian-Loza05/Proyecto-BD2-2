@@ -22,7 +22,7 @@ def search(Q, k):
         SELECT track_artist, track_name, ts_rank_cd(full_text, query, 1) AS rank
         FROM songslist, to_tsquery('english', '{query}') query
         WHERE query @@ full_text
-        ORDER BY rank ASC
+        ORDER BY rank DESC
         LIMIT {top_k};
     """)
 
