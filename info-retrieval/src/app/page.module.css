@@ -39,9 +39,11 @@
 .results {
   flex-grow: 1;
   width: 100%;
+  height: 20vh;
   display: inherit;
   flex-direction: column;
   align-items: center;
+  overflow-y: auto;
 }
 
 .body form {

@@ -17,8 +17,8 @@ export default function Cancion({indice, cancion}) {
 
   return (
     <div className={styles.cancion} >
-      <section className={styles.item}>
-        <p onClick={handleClick}> {indice+1}.- {cancion.nombre} - {cancion.artista} </p>
+      <section className={styles.item} onClick={handleClick}>
+        <p > {indice+1}.- {cancion.track_name} - {cancion.track_artist} </p>
       </section>
       <section>
         <Modal
@@ -27,8 +27,8 @@ export default function Cancion({indice, cancion}) {
           className={styles.customModal}
         >
           <div className={styles.modal}>
-            <h3> {cancion.nombre} </h3>
-            <p> {cancion.letra} </p>
+            <h3> {cancion.track_name} </h3>
+            <p> {cancion.lyrics} </p>
             <button onClick={closeModal}> Cerrar </button>
           </div>
         </Modal>

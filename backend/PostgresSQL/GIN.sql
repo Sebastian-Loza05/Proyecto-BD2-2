@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS songslist (
 );
 
 COPY songslist(track_id, track_name, track_artist, lyrics, track_popularity, track_album_id, track_album_name, track_album_release_date, playlist_name, playlist_id, playlist_genre, playlist_subgenre, danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, language)
-FROM 'E:\BD2\PROYECTO2\Proyecto-BD2-2\backend\spotify.csv' DELIMITER ',' CSV HEADER;
+FROM '/var/lib/postgresql/12/spotify.csv' DELIMITER ',' CSV HEADER;
 
 ALTER TABLE songslist ADD COLUMN combined_text TEXT;
 

@@ -4,26 +4,16 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useState } from 'react';
 import Results from '@/components/results';
+import { getTopKByInvert, getTopKByPostgres } from './api';
 
 export default function Home() {
   const [formData, setFormData] = useState({
     textQuery: '',
     topK: 0,
-    tipo: ''
   });
+  const [tipo, setTipo] = useState(null);
 
-  const [results, setResults] = useState([
-    {
-      nombre: "Cancion 1",
-      artista: "Diana",
-      letra: "Diana es muy gei le gusta comer puré de papa y tallarines a lo alfredo lalalalalalalalalalaalalalalalalalalalalalalala"
-    },
-    {
-      nombre: "Cancion 2",
-      artista: "Sebastián",
-      letra: "Sebastian es un tipo random lolololololol le gustan los carros y Diana sobre todo."
-    }
-  ]);
+  const [results, setResults] = useState([]);
 
   const handleInputChange = (e) => {
     const {name, value} = e.target;
@@ -33,8 +23,22 @@ export default function Home() {
     });
   }
 
-  const handleSubmit = (e) => {
+  const handleTipoChange = (e) => {
+    const value = e.target.value;
+    setTipo(value);
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    let data;
+    console.log("oe");
+    if (tipo == "postgres"){
+      data = await getTopKByPostgres(formData);
+    } else {
+      data = await getTopKByInvert(formData);
+    }
+    console.log("data: ", data);
+    setResults(data);
   }
 
   return (
@@ -77,10 +81,10 @@ export default function Home() {
               <strong className={styles.arrow}>
                 <i className="bi bi-arrow-right"></i>
               </strong>
-              <select name="tipo" value={formData.tipo} onChange={handleInputChange}>
+              <select name="tipo" value={tipo} onChange={handleTipoChange}>
                 <option value=""> Seleccciona una opción </option>
                 <option value="postgres">Postgres SQL </option>
-                <option value="Propio">Índice propio </option>
+                <option value="invert">Índice propio </option>
               </select>
             </label>
             <button type="submit"> Enviar </button>

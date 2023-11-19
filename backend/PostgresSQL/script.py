@@ -32,11 +32,11 @@ def search(Q, k):
     conn.commit()
     conn.close()
 
-
     for row in result:
         print(row)
 
     print("Tiempo de ejecucion :",
           (end - start) * 10 ** 3, "ms")
+
 
 search("Justin Biber", 100)
