@@ -19,8 +19,8 @@ def invert_index():
 @app.route('/psql', methods=['POST'])
 def psql():
     data = request.get_json()
-    query = data["query_text"]
-    top_k = int(data["top_k"])
+    query = data["textQuery"]
+    top_k = int(data["topK"])
 
     conn = database.connect()
     results = database.search(conn, query, top_k)

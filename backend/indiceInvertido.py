@@ -409,9 +409,9 @@ def get_spotify_docs(query, topk):
     results = []
     for i in docs:
         new = {}
-        new["nombre"] = DF.at[i, "track_name"]
-        new["artista"] = DF.at[i, "track_artist"]
-        new["letra"] = DF.at[i, "lyrics"]
+        new["track_name"] = DF.at[i, "track_name"]
+        new["track_artist"] = DF.at[i, "track_artist"]
+        new["lyrics"] = DF.at[i, "lyrics"]
         results.append(new)
     return results
 

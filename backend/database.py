@@ -1,13 +1,24 @@
 import psycopg2
 import time
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+HOST = os.getenv("HOST_DB")
+DATABASE = os.getenv("DATABASE_NAME")
+USER = os.getenv("USER_DB")
+PORT = os.getenv("PORT")
+PASSWORD = os.getenv("PASSWORD_DB")
+print(USER)
 
 def connect():
     return psycopg2.connect(
-        host="localhost",
-        database="BD2Proyecto2",
-        user="postgres",
-        port=5432,
-        password="utec"
+        host=HOST,
+        database=DATABASE,
+        user=USER,
+        port=PORT,
+        password=PASSWORD
     )
 
 def search(conn, Q, k):
@@ -19,7 +30,7 @@ def search(conn, Q, k):
         SELECT track_artist, track_name, lyrics, ts_rank_cd(full_text, query, 1) AS rank
         FROM songslist, to_tsquery('english', '{query}') query
         WHERE query @@ full_text
-        ORDER BY rank ASC
+        ORDER BY rank DESC
         LIMIT {k};
     """)
 

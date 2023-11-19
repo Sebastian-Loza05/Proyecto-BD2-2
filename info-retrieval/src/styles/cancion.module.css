@@ -1,7 +1,7 @@
 .cancion {
   margin-top: 1%;
   width: 27%;
-  height: 7vh;
+  height: 10vh;
 }
 
 .item {
@@ -37,7 +37,8 @@
 .modal {
   padding: 2%;
   width: 34%;
-  height: 50%;
+  height: 60%;
+  overflow-y: auto;
   border-radius: var(--border-radius);
   background-color: #214486;
   color: white;
