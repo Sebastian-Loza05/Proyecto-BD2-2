@@ -5,8 +5,10 @@ import database
 import ffmpeg
 import os
 from indice_multidimensional.rtree_method import knn_search, get_vector
+from indice_multidimensional.faiss import create_indexf, search_faiss
 import json
 
+import numpy as np
 
 @app.route('/', methods=['GET'])
 def hello():
@@ -70,3 +72,39 @@ def search_rtree():
         else:
             abort(500)
 
+@app.route('/faiss', methods=['POST'])
+def search_faissa():
+    error_422 = False
+    output = "uploads/output.wav"
+    try:
+        audio = request.files['audio']
+        if not audio:
+            error_422 = True
+            abort(422)
+
+        data = request.form.get('json')
+        json_data = json.loads(data)
+        top_k = json_data['topK']
+
+        save_file = f'uploads/{audio.filename}'
+        audio.save(save_file)
+        ffmpeg.input(save_file).output(output).run()
+        os.remove(save_file)
+        vector = get_vector(output)
+        vector = np.array(vector)
+        vector = vector.reshape(1, -1)
+        idx, data = create_indexf(20)
+
+        response = search_faiss(top_k, idx, data, vector)
+
+        os.remove(output)
+        return jsonify({
+            'success': True,
+            'results': response
+        })
+    except Exception as e:
+        print(e)
+        if error_422:
+            abort(422)
+        else:
+            abort(500)
