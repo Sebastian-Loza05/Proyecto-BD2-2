@@ -20,7 +20,7 @@ def get_vector(filename, prueba):
         x, sr = librosa.load("pruebas/" + filename)
     else:
         x, sr = librosa.load("wavs/" + filename)
-    mfccs = librosa.feature.mfcc(y=x, sr=sr, n_mfcc=13)
+    mfccs = librosa.feature.mfcc(y=x, sr=sr, n_mfcc=20)
     res = []
     for coef in mfccs:
         suma = sum(coef)
@@ -29,14 +29,14 @@ def get_vector(filename, prueba):
 
 
 def create_index(mfccs_vector):
-    if os.path.exists("puntos.data"):
-        os.remove("puntos.data")
-    if os.path.exists("puntos.index"):
-        os.remove("puntos.index")
-
     prop = index.Property()
     prop.dimension = 20
     prop.buffering_capacity = 2 * 20
+    if os.path.exists("puntos.data") and os.path.exists("puntos.index"):
+        os.remove("puntos.data")
+        os.remove("puntos.index")
+        # idx = index.Index(rtreefile='puntos.index', interleaved=True, properties=prop)
+        # return idx
     prop.dat_extension = 'data'
     prop.idx_extension = 'index'
     indx = index.Index('puntos', properties=prop)
@@ -46,7 +46,9 @@ def create_index(mfccs_vector):
 
 def knn_search(indx, point, k, mfcss_vectors):
     results = list(indx.nearest(coordinates=point, num_results=k))
-    print(list(mfcss_vectors.keys())[results[0]])
+    for i in results:
+        mf = mfcss_vectors[i]
+        print(mf["track_name"], ": ", mf["track_preview"])
     print(results)
 
 
@@ -60,8 +62,8 @@ for i, fila in df.iterrows():
     puntos.append(punto)
 
 indx = create_index(puntos)
-# prueba = get_vector("Voz_003.wav", True)
-# knn_search(indx, prueba, 2, mfcss_vectors)
+prueba = get_vector("cancion1.wav", True)
+knn_search(indx, prueba, 10, mfcss_vectors)
 
 
 
