@@ -1,9 +1,11 @@
-from rtree import index
 import os
+from rtree import index
+import faiss
+import numpy as np
+
+import pandas as pd
 import ffmpeg
 import librosa
-import librosa.display
-import pandas as pd
 
 def load_dataframes():
     df = pd.read_csv("indice_multidimensional/complete_spotify.csv", on_bad_lines="skip")
@@ -22,8 +24,7 @@ def get_vector(filename):
         res.append(suma / len(coef))
     return res
 
-
-def create_index(mfccs_vector=None):
+def create_indexRtree(mfccs_vector=None):
     prop = index.Property()
     prop.dimension = 20
     prop.buffering_capacity = 2 * 20
@@ -45,32 +46,51 @@ def knn_search(point, k):
     puntos = []
     for i, fila in df.iterrows():
         mfcss_vectors[i] = fila
-        # punto = fila["MFCC_Vector"].replace("[", "").replace("]", "").replace("\n", "").split(" ")
-        # punto = [float(x) for x in punto]
-        # puntos.append(punto)
-    indx = create_index(puntos)
+    indx = create_indexRtree(puntos)
     results = list(indx.nearest(coordinates=point, num_results=k))
     response = []
     for i in results:
         mf = mfcss_vectors[i]
-        response.append({"track_name": mf["track_name"], "track_preview": mf["track_preview"]})
+        response.append({
+            "track_name": mf["track_name"],
+            "track_preview": mf["track_preview"]
+        })
     indx.close()
     return response
 
+def create_indexFaiss(mfcss_vectors=None):
+    if os.path.exists("puntosFaiss.index"):
+        index = faiss.read_index("puntosFaiss.index")
+        return index
+    index = faiss.IndexFlatL2(20)
+    puntos = []
+    for value in mfcss_vectors.values():
+        point = value["MFCC_Vector"].replace(
+            "[", "").replace(
+            "]", "").replace(
+            "\n", "").split(" ")
+        point = [float(x) for x in point]
+        puntos.append(point)
 
-# mfcss_vectors = {}
-# puntos = []
-# df = load_dataframes()
-# for i, fila in df.iterrows():
-#     mfcss_vectors[i] = fila
-    # punto = fila["MFCC_Vector"].replace("[", "").replace("]", "").replace("\n", "").split(" ")
-    # punto = [float(x) for x in punto]
-    # puntos.append(punto)
+    puntos = np.array(puntos)
+    index.add(puntos)
+    faiss.write_index(index, 'puntosFaiss.index')
+    return index
 
-# prueba = get_vector("cancion1.wav", True)
-# knn_search(prueba, 15, mfcss_vectors)
+def faiss_search(vec, topk):
+    df = load_dataframes()
+    mfcss_vectors = {}
+    for i, fila in df.iterrows():
+        mfcss_vectors[i] = fila
+    indx = create_indexFaiss(mfcss_vectors)
+    response = []
+    distancias, indices = indx.search(vec, topk)
+    for i in indices[0]:
+        mf = mfcss_vectors[i]
+        response.append({
+            "track_name": mf["track_name"],
+            "track_preview": mf["track_preview"]
+        })
 
-
-
-
+    return response
 
