@@ -252,7 +252,9 @@ Es un hecho que mientras más alta la dimensionalidad de los datos, mas complejo
 #### IndexLSK
 El `IndexLSH` en FAISS es un tipo de índice que utiliza el metodo Locality-Sensitive Hashing.
 ##### Caracteristicas
-a
+- Búsqueda Aproximada: LSH es un método de búsqueda aproximada, por lo que no siempre encuentra los vecinos mas cercanos de manera precisa, pero es más rapido que otros métodos de búsqueda exacta, especialmente en conjunto de datos grandes y de alta dimensión.
+- Alta velocidad: Este indice es el ideal cuando lo que se requiere es velocidad de busqueda que precisión absoluta y se puede tolerar cierto grado de error en los resultados
+- Uso de funciones Hash: Emplea múltiples funciones hash para mapear vectores de alta dimensión a un número reducido de dimensiones, agrupando así vectores similares
 
 ### FLASK API
 El archivo views.py es una parte central de la aplicación Flask que se encarga de definir y manejar las rutas o endpoints a los que se puede acceder. Estos endpoints permiten realizar con un índice invertido y una base de datos PostgreSQL. 
