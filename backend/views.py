@@ -4,39 +4,52 @@ import indiceInvertido as invert
 import database
 import ffmpeg
 import os
-from indice_multidimensional.rtree_method import knn_search, get_vector
-from indice_multidimensional.faiss import create_indexf, search_faiss
 import json
 
 import numpy as np
 
-@app.route('/', methods=['GET'])
-def hello():
-    return "Hello from Flask"
+from indice_multidimensional.indice import (
+    knn_search,
+    create_indexFaiss,
+    faiss_search,
+    get_vector
+)
 
-@app.route('/invert_index', methods=['POST'])
-def invert_index():
-    query_text = request.json.get('textQuery')
-    top_k = int(request.json.get('topK'))
-    results = invert.get_spotify_docs(query_text, top_k)
-    print(results)
-    return jsonify(results)
+@app.route('/faiss', methods=['POST'])
+def search_faissa():
+    error_422 = False
+    output = "uploads/output.wav"
+    try:
+        audio = request.files['audio']
+        if not audio:
+            error_422 = True
+            abort(422)
 
-@app.route('/psql', methods=['POST'])
-def psql():
-    data = request.get_json()
-    query = data["textQuery"]
-    top_k = int(data["topK"])
+        data = request.form.get('json')
+        json_data = json.loads(data)
+        top_k = json_data['topK']
 
-    conn = database.connect()
-    results = database.search(conn, query, top_k)
-    conn.close()
-    print("Llamado a PSQL")
-    return jsonify(results)
+        save_file = f'uploads/{audio.filename}'
+        audio.save(save_file)
+        ffmpeg.input(save_file).output(output).run()
+        os.remove(save_file)
+        vector = get_vector(output)
+        vector = np.array(vector)
+        vector = vector.reshape(1, -1)
 
-@app.route('/mongo', methods=['GET'])
-def mongo():
-    return "Hello from mongo"
+        response = faiss_search(vector, top_k)
+
+        os.remove(output)
+        return jsonify({
+            'success': True,
+            'results': response
+        })
+    except Exception as e:
+        print(e)
+        if error_422:
+            abort(422)
+        else:
+            abort(500)
 
 @app.route('/rtree', methods=['POST'])
 def search_rtree():
@@ -72,39 +85,32 @@ def search_rtree():
         else:
             abort(500)
 
-@app.route('/faiss', methods=['POST'])
-def search_faissa():
-    error_422 = False
-    output = "uploads/output.wav"
-    try:
-        audio = request.files['audio']
-        if not audio:
-            error_422 = True
-            abort(422)
+@app.route('/', methods=['GET'])
+def hello():
+    return "Hello from Flask"
 
-        data = request.form.get('json')
-        json_data = json.loads(data)
-        top_k = json_data['topK']
+@app.route('/invert_index', methods=['POST'])
+def invert_index():
+    query_text = request.json.get('textQuery')
+    top_k = int(request.json.get('topK'))
+    results = invert.get_spotify_docs(query_text, top_k)
+    print(results)
+    return jsonify(results)
 
-        save_file = f'uploads/{audio.filename}'
-        audio.save(save_file)
-        ffmpeg.input(save_file).output(output).run()
-        os.remove(save_file)
-        vector = get_vector(output)
-        vector = np.array(vector)
-        vector = vector.reshape(1, -1)
-        idx, data = create_indexf(20)
+@app.route('/psql', methods=['POST'])
+def psql():
+    data = request.get_json()
+    query = data["textQuery"]
+    top_k = int(data["topK"])
 
-        response = search_faiss(top_k, idx, data, vector)
+    conn = database.connect()
+    results = database.search(conn, query, top_k)
+    conn.close()
+    print("Llamado a PSQL")
+    return jsonify(results)
 
-        os.remove(output)
-        return jsonify({
-            'success': True,
-            'results': response
-        })
-    except Exception as e:
-        print(e)
-        if error_422:
-            abort(422)
-        else:
-            abort(500)
+@app.route('/mongo', methods=['GET'])
+def mongo():
+    return "Hello from mongo"
+
+

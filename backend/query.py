@@ -117,10 +117,10 @@ def documentos_topK(query, topk, cantarchivos, cantDocuments, norma_doc):
 
     return topkDocuments
 
-query = input("Ingresa la query: ")
-topK = int(input("Ingresa el topK: "))
-
-print(wtf_query(query))
+# query = input("Ingresa la query: ")
+# topK = int(input("Ingresa el topK: "))
+#
+# print(wtf_query(query))
 
 
 
