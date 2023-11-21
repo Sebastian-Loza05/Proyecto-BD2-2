@@ -245,6 +245,15 @@ def search(Q, k):
     print("Tiempo de ejecucion :",
           (end - start) * 10 ** 3, "ms")
 ```
+### KNN-HighD
+Debido a que un índice para espacios vectoriales reduce su eficiencia con dimensiones muy altas, el uso de FAISS (Facebook Al Similitary Search), una biblioteca desarrollada por Facebook AI, diseñada para abordar de manera eficiente espacios vectoriales con dimensiones altas. 
+Es un hecho que mientras más alta la dimensionalidad de los datos, mas complejo se vuelve encontrar similitud. Sin embargo, FAISS, con su capacidad para manejar eficientemente datos de alta dimensión, ofreciendo la flexibilidad de poder elegir entre búsquedas exactas y aproximadas lo que permite tener un balance entre precisión y velocidad.
+
+#### IndexLSK
+El `IndexLSH` en FAISS es un tipo de índice que utiliza el metodo Locality-Sensitive Hashing.
+##### Caracteristicas
+a
+
 ### FLASK API
 El archivo views.py es una parte central de la aplicación Flask que se encarga de definir y manejar las rutas o endpoints a los que se puede acceder. Estos endpoints permiten realizar con un índice invertido y una base de datos PostgreSQL. 
 Importaciones:
