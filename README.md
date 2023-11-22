@@ -245,6 +245,35 @@ def search(Q, k):
     print("Tiempo de ejecucion :",
           (end - start) * 10 ** 3, "ms")
 ```
+### KNN-HighD
+Debido a que un índice para espacios vectoriales reduce su eficiencia con dimensiones muy altas, el uso de FAISS (Facebook Al Similitary Search), una biblioteca desarrollada por Facebook AI, diseñada para abordar de manera eficiente espacios vectoriales con dimensiones altas. 
+Es un hecho que mientras más alta la dimensionalidad de los datos, mas complejo se vuelve encontrar similitud. Sin embargo, FAISS, con su capacidad para manejar eficientemente datos de alta dimensión, ofreciendo la flexibilidad de poder elegir entre búsquedas exactas y aproximadas lo que permite tener un balance entre precisión y velocidad.
+
+#### IndexLSK
+El `IndexLSH` en FAISS es un tipo de índice que utiliza el metodo Locality-Sensitive Hashing.
+##### Caracteristicas
+- **Búsqueda Aproximada:** LSH es un método de búsqueda aproximada, por lo que no siempre encuentra los vecinos mas cercanos de manera precisa, pero es más rapido que otros métodos de búsqueda exacta, especialmente en conjunto de datos grandes y de alta dimensión.
+- **Alta velocidad:** Este indice es el ideal cuando lo que se requiere es velocidad de busqueda que precisión absoluta y se puede tolerar cierto grado de error en los resultados
+- **Uso de funciones Hash:** Emplea múltiples funciones hash para mapear vectores de alta dimensión a un número reducido de dimensiones, agrupando así vectores similares
+
+##### Ventajas
+- **Eficiencia en tiempo de búsqueda**
+- **Escala con grandes dimensiones y tamaño de datos**
+- **Flexibilidad en la configuración**
+
+##### Desventajas
+- **Búsqueda Aproximada**
+- **Seleccion de parametros sensible**
+- **Compromiso entre velocidad y precisión**
+
+##### Funcionamiento interno
+- **Hashing de Vectores**
+  Los vectores de datos se mapean en un espacio de hash más pequeño. Los vectores que son similares tienen una alta probabilidad de colisionar en el mismo segmento hash (bucket)
+- **Creación de Buckets**
+  Se crean múltiples `buckets`, y cada vector se asigna a uno o mas `buckets` basados en sus valores de hash
+- **Búsqueda en Buckets**
+  Durante la búsqueda, solo se considera los vectores dentro del mismo `bucket`, lo que reduce significativamente el espacio de búsqueda
+
 ### FLASK API
 El archivo views.py es una parte central de la aplicación Flask que se encarga de definir y manejar las rutas o endpoints a los que se puede acceder. Estos endpoints permiten realizar con un índice invertido y una base de datos PostgreSQL. 
 Importaciones:
