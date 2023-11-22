@@ -62,7 +62,7 @@ def create_indexFaiss(mfcss_vectors=None):
     if os.path.exists("puntosFaiss.index"):
         index = faiss.read_index("puntosFaiss.index")
         return index
-    index = faiss.IndexFlatL2(20)
+    index = faiss.IndexHNSWFlat(20, 16)
     puntos = []
     for value in mfcss_vectors.values():
         point = value["MFCC_Vector"].replace(
