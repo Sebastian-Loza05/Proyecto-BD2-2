@@ -25,7 +25,7 @@ Sin indexación, una consulta de búsqueda requeriría escanear cada documento e
 ## Backend
 ### Índice Invertido
 El código presentado es para construir un índice invertido para un conjunto de documentos, en este caso, canciones de Spotify, utilizando el algoritmo SPIMI (Single-pass in-memory indexing). Se usan las principales librerías
-```
+```python
 import math
 import pickle
 import os
@@ -35,7 +35,7 @@ nltk.download('punkt')
 ```
 ### Preprocesamiento de texto
 Se establecen stopwords en inglés y español, además de stemmers para procesar el texto y dejarlo en un formato estandarizado. La función preprocess_text lleva a cabo este proceso. La función devuelve el texto preprocesado como una cadena de caracteres con tokens separados por espacios. Se aplica Stemming que es una técnica de procesamiento del lenguaje natural que se utiliza para reducir las palabras a su raíz o forma base. Por ejemplo, "running" se convierte en "run". 
-```
+```python
 stop_words = set(stopwords.words('english')).union(set(stopwords.words('spanish')))
 block_num = 0
 stemmer_english = SnowballStemmer('english')
@@ -63,7 +63,7 @@ Se verifica si el tamaño total de inv_index y posting_lists cuando se convierte
 - Luego, se verifica si el término ya está en el índice invertido. Si no está, se añade al índice y se crea una nueva lista de publicaciones para ese término. Si ya está, se actualiza la lista de publicaciones con la frecuencia del término para el documento actual.
   
 Al final de la función, se devuelve el contador indice, que representa la cantidad total de índices o bloques generados.
-```
+```python
 def generate_tfw(docs):
     inv_index = {}
     posting_lists = []
@@ -97,7 +97,7 @@ def generate_tfw(docs):
 ```
 ### Merge
 La función merge_blocks es la responsable de fusionar bloques más pequeños del índice invertido en un índice invertido más grande. Las listas de publicaciones de términos coincidentes en diferentes bloques se combinan para crear una única lista de publicaciones para ese término en el nuevo índice invertido fusionado. Después de fusionar dos bloques de índices invertidos, se eliminan los archivos originales para conservar espacio y evitar confusiones.
-```
+```python
 def merge_blocks(indices):
     new_inv_idx = {}
     for i in range(indices):
@@ -145,7 +145,7 @@ def merge_blocks(indices):
 ### Similitud Coseno
 El método score_documents toma como parámetros una consulta (query) y un índice invertido fusionado (merged_index). Luego, se divide la consulta en términos individuales y se inicializa un diccionario doc_scores para almacenar los scores de los documentos. Para cada término en la consulta, si el término está en el índice invertido, se itera a través de las listas de publicación (documentos que contienen el término) y se acumula el valor de TF-IDF para ese término en el score del documento.
 Luego, se normaliza el score del documento dividiendo el score acumulado por la longitud del documento. Finalmente, se multiplica el score del documento por la cantidad de términos de la consulta que coinciden con el documento. Esto es un factor adicional para aumentar el score de los documentos que contienen más términos de la consulta.
-```
+```python
 def score_documents(query, merged_index):
     print("APLICANDO COSINE...")
     query_terms = query.split()
@@ -182,7 +182,7 @@ Conversión a tsvector:
 - Creación del Índice:
 
     - Se crea un índice usando la extensión gin (Generalized Inverted Index) en la columna combined_text. Esto permite búsquedas rápidas de texto completo en la columna combined_text
-```
+```sql
 CREATE TABLE IF NOT EXISTS songslist (
     track_id VARCHAR(255) PRIMARY KEY,
     track_name VARCHAR(255),
@@ -222,7 +222,7 @@ ORDER BY rank ASC
 LIMIT 100;
 ```
 La función de búsqueda toma una consulta Q y un número k para devolver los k resultados superiores basados en la coincidencia de texto completo. La consulta se divide y se reformatea para adaptarse a la función to_tsquery. La consulta SQL busca coincidencias en la columna full_text y devuelve artistas, nombres de canciones y una puntuación de coincidencia (rank).
-```
+```python
 def search(Q, k):
     query = Q.split(" ")
     query = '|'.join(query)
@@ -245,6 +245,31 @@ def search(Q, k):
     print("Tiempo de ejecucion :",
           (end - start) * 10 ** 3, "ms")
 ```
+### MFCC
+Para la obtención de los vectores característicos que representen a cada canción que indexaremos, usamos los Coeficientes Cepstrales de las frecuencias de Mel (MFCC). Normalmente se usan 13 coeficientes, ya que empíricamente se ha determinado que es la cantidad recomendable para una buena presición en la extracción de las características. Sin embargo, nosotros usaremos 20, ya que para la extracción de características en música es recomendable usar más coeficientes, cómo mínimo 20.
+
+### Rtree
+Usamos la librería rtree de python. Para esto necesitamos los puntos que serían los vectores característcos de las canciones que vamos a indexar, pero todos deben de tener la misma dimensión. El rtrre en python debe tener ciertas características como los archivos en los que se va a escribir el índice, la dimensión, etc.
+```python
+def create_indexRtree(mfccs_vector=None):
+    prop = index.Property()
+    prop.dimension = 20
+    prop.buffering_capacity = 2 * 20
+    prop.storage = index.RT_Disk
+    prop.overwrite = False
+    if os.path.exists("puntos.dat") and os.path.exists("puntos.idx"):
+        idx = index.Rtree('puntos', properties=prop)
+        return idx
+    prop.dat_extension = 'dat'
+    prop.idx_extension = 'idx'
+    indx = index.Index('puntos', properties=prop)
+    for i, p in enumerate(mfccs_vector):
+        indx.insert(i, p)
+    return indx
+
+```
+En este caso mfccs_vector es una lista con todos los puntos que vamos a ingresar y en el caso de que nuestro índice ya esté creado este parámetro sería None ya que el índice rtree sería cargado de los archivos. La dimensión es 20 al igual que la de los vectores que vamos a indexar. Definimos que el índice se va a guardar en el disco y q no se va a sobreescribir. Como nosotros construiremos el índice sólo una vez, no es muy importante el valor del buffering capacity ya que este sólo influirá en el rendimineto de la construcción del índice al insertar todos los valores.
+
 ### KNN-HighD
 
 #### IndexLSK
