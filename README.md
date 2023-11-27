@@ -135,7 +135,30 @@ En este caso usamos la librería librosa para obtener los vectores característi
     [223, 234,...]
 >
 ```
-Cada subvector representa cada uno de los 20 coeficientes. Los valores de cada subvector vendrían a ser los valores que toman cada coeficiente en un periodo de tiempo determinado. Es decir, que el primer elemento '123' es el valor que toma el primer coeficiente en una ventana de los primeros 20 milisegundos, El segundo valor para los siguientes 20 milisegundos, y así hasta completar la canción. Es por esto q la dimensíón del vector puede variar dependiendo de la longitud de la canción. 
+Cada subvector representa cada uno de los 20 coeficientes. Los valores de cada subvector vendrían a ser los valores que toman cada coeficiente en un periodo de tiempo determinado. Es decir, que el primer elemento '123' es el valor que toma el primer coeficiente en una ventana de los primeros 20 milisegundos, El segundo valor para los siguientes 20 milisegundos, y así hasta completar la canción. Es por esto q la dimensíón del vector puede variar dependiendo de la longitud de la canción.
+
+### Sequential
+
+El algoritmo KNN secuencial utiliza un diccionario que contiene los vectores característicos de cada canción. Al realizar una query, el algoritmo compara el vector característico de esa canción con los vectores característicos de cada canción en la colección mediante el cálculo de la distancia euclidiana con n = 20 donde n consiste en la dimensión del vector característico. Conforme se van calculando las distancias, estas son agregadas a un array de distancias para posteriormente ordenarlas, y retornando los n primeros valores.  
+
+![Sequential](https://ilmudatapy.com/wp-content/uploads/2020/11/knn-2.png)
+
+```python
+def knn_search(query, C, k):
+    distances = []
+
+    for track_id, punto_info in C.items():
+        vector = punto_info["MFCC_Vector"]
+        distance = euclidean_distance(query, vector)
+        distances.append((distance, track_id))
+
+    distances.sort(key=lambda x: x[0])
+
+    neighbors = distances[:k]  
+
+    return neighbors
+```
+
 ### Rtree
 Usamos la librería rtree de python. Para esto necesitamos los puntos que serían los vectores característcos de las canciones que vamos a indexar, pero todos deben de tener la misma dimensión. El rtree en python debe tener ciertas características como los archivos en los que se va a escribir el índice, la dimensión, etc. 
 ```python
