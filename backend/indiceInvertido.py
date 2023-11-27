@@ -85,6 +85,7 @@ def write_to_disk(inv_index, postings, indice, last_block_num):
         # print(f"bloque{i+last_block_num}: ", postings[i])
         with open(f"blocks/bloque{i+last_block_num}.pkl", "wb") as file:
             pickle.dump(postings[i], file)
+
 # generate tfw docs
 def generate_tfw(docs):
     borrar_archivos_previos()
@@ -124,6 +125,7 @@ def generate_tfw(docs):
     CANTIDAD_INDICES = indice
     print(block_num)
     return block_num
+
 # combine blocks
 def combine_blocks(bloque1, bloque2, llave_bloque1, llave_bloque2):
     bloque_escribir = {**bloque2}
