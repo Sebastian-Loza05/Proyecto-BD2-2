@@ -86,6 +86,7 @@ def write_to_disk(inv_index, postings, indice, last_block_num):
         with open(f"blocks/bloque{i+last_block_num}.pkl", "wb") as file:
             pickle.dump(postings[i], file)
 
+# generate tfw docs
 def generate_tfw(docs):
     borrar_archivos_previos()
     print("Eliminó todo")
@@ -125,6 +126,7 @@ def generate_tfw(docs):
     print(block_num)
     return block_num
 
+# combine blocks
 def combine_blocks(bloque1, bloque2, llave_bloque1, llave_bloque2):
     bloque_escribir = {**bloque2}
     next = -1
@@ -167,7 +169,7 @@ def combine_blocks(bloque1, bloque2, llave_bloque1, llave_bloque2):
     with open(f"blocks/bloque{llave_bloque}.pkl", "wb") as output:
         pickle.dump(bloque_escribir, output)
 
-
+# combine indices
 def combine_indices(indice_mergeado, key, value_k1, value_k2):
     indice_mergeado[key] = [
         value_k1[0] + value_k2[0],
@@ -199,6 +201,7 @@ def combine_indices(indice_mergeado, key, value_k1, value_k2):
         # print(f"Elimando bloque{value_k1[1]}")
         os.remove(f"blocks/bloque{value_k1[1]}.pkl")
 
+# merge_interno
 def merge_interno(indice_local, idx_actual, cantidad):
     global CARPETA
     previo = "F1"
@@ -263,7 +266,7 @@ def merge_interno(indice_local, idx_actual, cantidad):
     # print_indice(indice_archivo + 1)
     # input()
     return indice_archivo + 1
-
+# actualizar block
 def actualizar_block(bloque, idf, norma):
     with open(f"blocks/bloque{bloque}.pkl", "rb") as file:
         data = pickle.load(file)
@@ -280,6 +283,7 @@ def actualizar_block(bloque, idf, norma):
     with open(f"blocks/bloque{bloque}.pkl", 'wb') as file:
         pickle.dump(data, file)
 
+# actualizar tf idf
 def actualizar_tf_idf(norma):
     indice_archivos = 0
     carp = "F2" if CARPETA else "F1"
@@ -297,7 +301,7 @@ def actualizar_tf_idf(norma):
 
         indice_archivos += 1
 
-
+# merge
 def merge(cantidad_bloques):
     global CANTIDAD_INDICES
     idx_actual = 0
@@ -326,6 +330,7 @@ def merge(cantidad_bloques):
     # print_indice()
     print(norma)
 
+# wtf query
 def wtf_query(textQuery):
     tokens = preprocess_text(textQuery)
     query_frecuency = {}
@@ -339,6 +344,7 @@ def wtf_query(textQuery):
 
     return query_frecuency
 
+# binary recollection
 def binary_recollection(word):
     # indiceinvertido 0 -> 1
     # bloque 0 -> 1
@@ -360,6 +366,7 @@ def binary_recollection(word):
 
     return -1, -1
 
+# documentos topK
 def documentos_topK(query, topk):
     query_frecuency = wtf_query(query)
     global NORMA
