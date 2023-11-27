@@ -105,14 +105,37 @@ Conversión a tsvector:
 - Creación del Índice:
 
     - Se crea un índice usando la extensión gin (Generalized Inverted Index) en la columna combined_text. Esto permite búsquedas rápidas de texto completo en la columna combined_text
+```sql
+UPDATE songslist
+SET combined_text = TRIM(BOTH ' ' FROM combined_text);
+
+ALTER TABLE songslist ADD COLUMN full_text tsvector;
+
+UPDATE songslist SET full_text = T.full_text
+FROM (
+    SELECT track_id, setweight(to_tsvector('english', combined_text), 'A') AS full_text
+    FROM songslist
+) T
+WHERE T.track_id = songslist.track_id;
+```
 
 La función de búsqueda toma una consulta Q y un número k para devolver los k resultados superiores basados en la coincidencia de texto completo. La consulta se divide y se reformatea para adaptarse a la función to_tsquery. La consulta SQL busca coincidencias en la columna full_text y devuelve artistas, nombres de canciones y una puntuación de coincidencia (rank).
 
 ### MFCC
-Para la obtención de los vectores característicos que representen a cada canción que indexaremos, usamos los Coeficientes Cepstrales de las frecuencias de Mel (MFCC). Normalmente se usan 13 coeficientes, ya que empíricamente se ha determinado que es la cantidad recomendable para una buena presición en la extracción de las características. Sin embargo, nosotros usaremos 20, ya que para la extracción de características en música es recomendable usar más coeficientes, cómo mínimo 20.
-
+Para la obtención de los vectores característicos que representen a cada canción que indexaremos, usamos los Coeficientes Cepstrales de las frecuencias de Mel (MFCC). Normalmente se usan 13 coeficientes, ya que empíricamente se ha determinado que es la cantidad recomendable para una buena presición en la extracción de las características. Sin embargo, nosotros usaremos 20, ya que para la extracción de características en música es recomendable usar más coeficientes, cómo mínimo 20. En este caso usamos la librería librosa para obtener los vectores característicos de las canciones, y seteamos el parámetro de n_mfcc=20. Esto nos retorna un vector de dimensión variable. Su estructura básica es un vectore de 20 subvectores:
+```
+<
+    [123, 523,...],
+    [123, 324,...],
+    .
+    .
+    .
+    [223, 234,...]
+>
+```
+Cada subvector representa cada uno de los 20 coeficientes. Los valores de cada subvector vendrían a ser los valores que toman cada coeficiente en un periodo de tiempo determinado. Es decir, que el primer elemento '123' es el valor que toma el primer coeficiente en una ventana de los primeros 20 milisegundos, El segundo valor para los siguientes 20 milisegundos, y así hasta completar la canción. Es por esto q la dimensíón del vector puede variar dependiendo de la longitud de la canción. 
 ### Rtree
-Usamos la librería rtree de python. Para esto necesitamos los puntos que serían los vectores característcos de las canciones que vamos a indexar, pero todos deben de tener la misma dimensión. El rtrre en python debe tener ciertas características como los archivos en los que se va a escribir el índice, la dimensión, etc.
+Usamos la librería rtree de python. Para esto necesitamos los puntos que serían los vectores característcos de las canciones que vamos a indexar, pero todos deben de tener la misma dimensión. El rtree en python debe tener ciertas características como los archivos en los que se va a escribir el índice, la dimensión, etc. 
 ```python
 def create_indexRtree(mfccs_vector=None):
     prop = index.Property()
@@ -134,6 +157,8 @@ def create_indexRtree(mfccs_vector=None):
 ![Rtree](https://media.geeksforgeeks.org/wp-content/uploads/20190412142437/R-tree.png)
 
 En este caso mfccs_vector es una lista con todos los puntos que vamos a ingresar y en el caso de que nuestro índice ya esté creado este parámetro sería None ya que el índice rtree sería cargado de los archivos. La dimensión es 20 al igual que la de los vectores que vamos a indexar. Definimos que el índice se va a guardar en el disco y q no se va a sobreescribir. Como nosotros construiremos el índice sólo una vez, no es muy importante el valor del buffering capacity ya que este sólo influirá en el rendimineto de la construcción del índice al insertar todos los valores.
+
+Los vectores mfccs que usamos para el rtree son de dimensión 20. Como ya detallamos la dimensión de los vectores obtenidos por la librería **librosa**, para el caso del rtree, obtenemos el promedio de cada uno de los coeficientes con respecto a todas las "ventanas" (periodos de tiempo) obtenidos, y así al final cada vector tendrá sólo 20 valores, que sería la nueva dimensión.
 
 ### KNN-HighD
 
