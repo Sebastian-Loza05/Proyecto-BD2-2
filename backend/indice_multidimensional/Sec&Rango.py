@@ -40,7 +40,7 @@ def knn_search(query, C, k):
 
     distances.sort(key=lambda x: x[0])
 
-    neighbors = distances[:k]  
+    neighbors = distances[:k]
 
     return neighbors
 

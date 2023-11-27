@@ -10,9 +10,9 @@ import numpy as np
 
 from indice_multidimensional.indice import (
     knn_search,
-    create_indexFaiss,
     faiss_search,
-    get_vector
+    get_vector,
+    vectorize
 )
 
 @app.route('/faiss', methods=['POST'])
@@ -33,10 +33,15 @@ def search_faissa():
         audio.save(save_file)
         ffmpeg.input(save_file).output(output).run()
         os.remove(save_file)
-        vector = get_vector(output)
+        vector = vectorize(output)
+        # vector = get_vector(output)
         vector = np.array(vector)
+        # print(vector[-1])
+        # vector = np.trunc(vector * 10**7) / 10**7
         vector = vector.reshape(1, -1)
 
+        # print(vector[-1][-1])
+        print(vector)
         response = faiss_search(vector, top_k)
 
         os.remove(output)
@@ -70,7 +75,8 @@ def search_rtree():
         audio.save(save_file)
         ffmpeg.input(save_file).output(output).run()
         os.remove(save_file)
-        vector = get_vector(output)
+        # vector = get_vector(output)
+        vector = vectorize(output)
         response = knn_search(vector, top_k)
         os.remove(output)
         return jsonify({
