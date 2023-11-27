@@ -159,6 +159,25 @@ def knn_search(query, C, k):
     return neighbors
 ```
 
+Por otro lado, para la implementación de búsqueda por rango, al igual que el algoritmo anterior compara el vector característico de la query con los vectores característicos de la colección mediante el cálculo de la distancia euclidiana para luego evaluar las distancias con un radio determinado por el usuario, si la distancia se encuentra dentro del radio la canción es añadida al array de resultados.  
+
+```python
+
+def range_search(query, C, radius):
+    results = []
+
+    for track_id, punto_info in C.items():
+        vector = punto_info["MFCC_Vector"]
+        distance = euclidean_distance(query, vector)
+
+        if distance <= radius:
+            results.append((distance, track_id))
+
+    return results
+
+```
+
+
 ### Rtree
 Usamos la librería rtree de python. Para esto necesitamos los puntos que serían los vectores característcos de las canciones que vamos a indexar, pero todos deben de tener la misma dimensión. El rtree en python debe tener ciertas características como los archivos en los que se va a escribir el índice, la dimensión, etc. 
 ```python
