@@ -61,6 +61,8 @@ En caso el término ya pertenezca al índice invertido se agrega el nuevo docume
   
 Al final de la función, se devuelve la cantidad de bloques escritos en memoria secundaria.
 
+El código está [aquí](generate-tfw-docs)
+
 ### Merge
 Para el merge se realizan distintas operaciones separadas en distintas funciones (*merge()*, *merge_interno()*, *combine_indices()*, *combine_blocks()*, *actualizar_tf_idf()*, *actualizar_block()*)
 - Merge()
