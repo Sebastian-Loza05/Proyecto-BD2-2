@@ -1,0 +1,424 @@
+/* Estilo para la cabecera */
+.container{
+  height: 100vh; /* Altura completa de la ventana del navegador */
+  overflow: hidden;
+}
+
+.header {
+  background-color: black;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo { 
+  margin-right: 10px; /* Añade un poco de margen entre el logo y el título */
+}
+
+.content {
+  background-color: rgb(34, 34, 34);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 793px; /* Agrega esta línea para que el contenido ocupe todo el alto de la pantalla */
+  box-sizing: border-box; /* Para que el padding no aumente el alto */
+}
+
+/* Estilo para las columnas */
+.columns {
+  display: flex;
+  width: 100%;
+  flex: 0.5; /* Haz que las columnas ocupen todo el espacio vertical disponible */
+}
+
+
+/* Estilo para la columna del medio */
+.columnMiddle {
+  flex: 4; /* Toma el doble de espacio que las columnas izquierda y derecha */
+  background-color: transparent; /* Color de fondo personalizado */
+  box-sizing: border-box; /* Para que el padding no aumente el ancho */
+  padding: 20px
+}
+
+/* Puedes personalizar aún más los estilos según tus necesidades */
+.columnLeft {
+  flex: 1;
+  background-color: transparent; /* Sin color de fondo */
+  color: white; /* Texto blanco */
+  padding: 10px; /* Espaciado interno */
+}
+
+/* Estilo para los ítems de la lista */
+.item {
+  padding: 10px 0; /* Espaciado vertical */
+  border-bottom: 2px solid #333; /* Separador entre ítems */
+  cursor: pointer; /* Cursor tipo puntero para indicar que es clickeable */
+}
+
+/* Estilo para el ícono y texto de la lista */
+.icon, .text {
+  margin-right: 10px; /* Espaciado a la derecha de íconos y texto */
+}
+
+/* Estilo para el título de la sección de la lista */
+.sectionTitle {
+  margin-top: 20px; /* Espaciado superior */
+  font-weight: bold; /* Texto en negrita */
+}
+
+/* Estilo para el título del ítem activo */
+.activeItem {
+  color: #d82323; /* Color verde de Spotify para el ítem activo */
+}
+
+/* Estilo para la lista de playlists */
+.playlists {
+  margin-top: 20px; /* Espaciado superior */
+}
+
+/* Estilo para cada ítem de playlist */
+.playlistItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px; /* Espaciado entre ítems */
+}
+
+/* Estilo para la imagen de la playlist */
+.playlistImage {
+  width: 50px; /* Tamaño de la imagen */
+  height: 50px; /* Tamaño de la imagen */
+  margin-right: 10px; /* Espaciado a la derecha de la imagen */
+  object-fit: cover; /* Asegura que la imagen cubra todo el espacio sin distorsionarse */
+}
+
+/* Estilo para el nombre de la playlist */
+.playlistName {
+  font-weight: bold; /* Texto en negrita */
+}
+
+/* Estilo para el creador de la playlist */
+.playlistCreator {
+  font-size: 0.8em; /* Texto más pequeño para el creador */
+}
+
+.songsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start; /* Asegura que los elementos se alineen al principio */
+  gap: 40px 50px; /* Espacio entre elementos */
+  justify-content: flex-start; /* Alinea los elementos al principio */
+}
+
+/* Estilo para la tarjeta de cada canción */
+.songCard {
+  width: 180px; /* Ancho de la tarjeta */
+  background-color: #282828; /* Color de fondo */
+  border-radius: 8px; /* Bordes redondeados */
+  overflow: hidden; /* Oculta lo que se salga de los bordes */
+  margin-bottom: 8px; /* Espaciado inferior */
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.songCard:hover {
+  transform: scale(1.05); /* Ligeramente más grande al pasar el cursor */
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Sombra alrededor del elemento */
+}
+/* Estilo para la imagen de la canción */
+.songImage {
+  width: 100%; /* Ancho completo */
+  height: 180px; /* Altura fija */
+  object-fit: cover; /* Ajustar imagen */
+}
+
+/* Estilo para los detalles de la canción */
+.songDetails {
+  padding: 10px; /* Espaciado interno */
+  color: white; /* Texto en blanco */
+}
+
+/* Estilo para el título de la canción */
+.songTitle {
+  font-weight: bold; /* Negrita para el título */
+  margin-bottom: 5px; /* Espaciado inferior */
+}
+
+/* Estilo para el artista de la canción */
+.songArtist {
+  font-size: 0.9em; /* Tamaño de fuente más pequeño */
+  color: #b3b3b3; /* Color de fuente más claro */
+  margin-bottom: 5px; /* Espaciado inferior */
+}
+
+/* Estilo para la duración de la canción */
+.songDuration {
+  font-size: 0.8em; /* Tamaño de fuente aún más pequeño */
+  color: #b3b3b3; /* Color de fuente claro */
+}
+
+/* Estilo para la barra de búsqueda */
+.searchBar {
+  width: 300px;
+  background-color: transparent; /* Fondo transparente */
+  border: none; /* Sin borde */
+  border-bottom: 2px solid #b3b3b3; /* Borde inferior para indicar la línea de texto */
+  color: white; /* Texto en blanco */
+  padding: 10px 0; /* Espaciado vertical sin espaciado horizontal */
+  font-size: 16px; /* Tamaño de fuente */
+  margin-bottom: 20px; /* Espaciado debajo de la barra de búsqueda */
+}
+.selectInput option{
+  color: black !important;
+}
+
+.searchBar, .numberInput, .selectInput {
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra suave */
+  background: rgb(255, 255, 255);
+  margin-bottom: 20px;
+}
+
+
+.searchContainer {
+  display: flex;
+  align-items: center; /* Alinea verticalmente los elementos */
+  gap: 10px; /* Espacio entre elementos de búsqueda */
+  margin-bottom: 20px; /* Espaciado debajo del contenedor de búsqueda */
+}
+
+.numberInput, .selectInput {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+/* Estilo para la columna derecha */
+.columnRight {
+  background-color: transparent; /* Fondo negro como indicaste */
+  color: white; /* Texto en blanco */
+  padding: 10px; /* Espaciado interno */
+  max-width: 400px;
+}
+
+/* Estilo para el contenido de la canción seleccionada */
+.songContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centrado vertical */
+}
+
+/* Estilo para la imagen de la canción seleccionada */
+.songContent .songImage {
+  width: 100%; /* Ancho completo */
+  max-width: 300px; /* Máximo ancho de la imagen */
+  border-radius: 8px; /* Bordes redondeados para la imagen */
+  margin-bottom: 20px; /* Espaciado debajo de la imagen */
+  height: 295px;
+}
+
+/* Estilo para la letra de la canción seleccionada */
+.songLyrics {
+  white-space: pre-wrap; /* Respeta saltos de línea y espacios */
+  text-align: center; /* Texto centrado */
+  padding: 20px; /* Espaciado interno */
+  overflow-y: auto; /* Desplazamiento vertical si es necesario */
+  background-color: #282828; /* Fondo de la tarjeta */
+  border-radius: 8px; /* Bordes redondeados */
+  padding: 20px; /* Espaciado interno */
+  margin-top: 20px; /* Espacio entre la imagen y la letra */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra suave */
+  color: #fff; /* Texto en blanco */
+}
+
+.columnLeft, .columnMiddle, .columnRight {
+  overflow-y: auto; /* Habilita el desplazamiento vertical si el contenido es demasiado alto */
+  max-height: 100vh; /* Altura máxima antes de que comience a desplazarse */
+}
+
+.defaultRight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #282828;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  text-align: center;
+}
+
+.defaultImage {
+  width: 100%;
+  max-width: 300px; /* Ajusta según la imagen que uses */
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.welcomeMessage {
+  font-size: 1.2em;
+}
+
+.defaultImage {
+  width: 100%;
+  max-width: 300px; /* Ajusta según la imagen que uses */
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.logo {
+  width: 100%;
+  max-width: 100px; /* Ajusta según la imagen que uses */
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.searchButton {
+  background-color: #b91d1d; /* Color verde de Spotify */
+  color: white; /* Texto en blanco */
+  border: none; /* Sin borde */
+  padding: 10px 20px; /* Espaciado interno */
+  border-radius: 20px; /* Bordes redondeados */
+  font-size: 16px; /* Tamaño de fuente */
+  cursor: pointer; /* Cursor tipo puntero */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra suave */
+  transition: background-color 0.3s ease;
+  margin-bottom: 20px; /* Transición suave del color de fondo */
+}
+
+.searchButton:hover {
+  background-color: rgb(215, 30, 30); /* Color verde ligeramente más claro al pasar el cursor */
+}
+
+.inputField{
+  margin-bottom: 20px;
+}
+
+
+.inputField, .selectField {
+  background-color: transparent; /* Fondo transparente */
+  border: none; /* Sin borde */
+  border-bottom: 2px solid #b3b3b3; /* Borde inferior para indicar la línea de texto */
+  color: white; /* Texto en blanco */
+  padding: 10px 0; /* Espaciado vertical sin espaciado horizontal */
+  margin-right: 10px; /* Espaciado a la derecha */
+  font-size: 16px; 
+  /* Tamaño de fuente */
+}
+
+.columnScroll {
+  /* Altura máxima y desbordamiento para activar el scroll */
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+/* Estilos para las barras de desplazamiento en WebKit (Chrome, Safari, Edge) */
+.columnScroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.columnScroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.columnScroll::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.columnScroll::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Estilos para las barras de desplazamiento en Firefox */
+.columnScroll {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+/* Estilos para eliminar las flechas del input number en navegadores basados en WebKit como Chrome, Safari, y Edge */
+.inputField::-webkit-inner-spin-button,
+.inputField::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.uploadButton {
+  display: block; /* O 'none' si quieres ocultarlo y usar un botón personalizado */
+  margin: 20px 0; /* Ajusta el espaciado según sea necesario */
+  /* Agrega más estilos aquí */
+}
+
+.uploadButton {
+  cursor: pointer; /* Cambia el cursor al pasar por encima */
+  padding: 12px 18px; /* Espaciado interno para un aspecto más grande */
+  margin-top: 20px; /* Espaciado superior */
+  margin-right: 20px;
+  border-radius: 50px; /* Bordes redondeados */
+  border: 0px solid #fff; /* Borde blanco */
+  background-color: #b91d1d; /* Fondo verde característico de Spotify */
+  color: white; /* Texto en blanco */
+  transition: all 0.3s ease; /* Suaviza la transición de los cambios de estilo */
+  text-align: center; /* Alinea el texto al centro */
+  display: inline-block; /* Permite que se apliquen márgenes y padding */
+  font-size: 16px; /* Tamaño del texto */
+}
+
+.uploadButton:hover {
+  background-color: #1ed760; /* Un tono de verde más claro al pasar el cursor */
+  box-shadow: 0 3px 4px 0 rgba(0,0,0,0.2); /* Sombra suave para el efecto elevado */
+}
+
+.fileContainer {
+  position: relative; /* Posicionamiento relativo para el contenedor */
+  display: inline-block; /* Permite que se apliquen márgenes y padding */
+}
+
+.fileContainer input[type="file"] {
+  font-size: 50px; /* Aumenta el tamaño de fuente para ampliar la 'zona de clic' */
+  position: absolute; /* Posicionamiento absoluto */
+  top: 0;
+  right: 0;
+  opacity: 0; /* Oculta el input real */
+}
+
+
+.progressBarContainer {
+  width: 100%; /* El contenedor ocupa todo el ancho */
+  background-color: #ddd; /* Fondo gris para la barra de progreso */
+  border-radius: 4px; /* Bordes redondeados */
+  margin-top: 10px; /* Espaciado superior */
+}
+
+.progressBar {
+  height: 10px; /* Altura de la barra de progreso */
+  background-color: #b91d1d; /* Fondo verde para la barra de progreso */
+  border-radius: 4px; /* Bordes redondeados */
+  transition: width 0.4s ease; /* Transición suave para el aumento de la barra */
+}
+
+
+.scanButton {
+  background-color: #b91d1d; /* Color azul */
+  color: white; /* Texto en blanco */
+  border: none; /* Sin borde */
+  padding: 10px 20px; /* Espaciado interno */
+  border-radius: 20px; /* Bordes redondeados */
+  font-size: 16px; /* Tamaño de fuente */
+  cursor: pointer; /* Cursor tipo puntero */
+  margin-left: 1px; /* Espaciado a la izquierda */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra suave */
+  transition: background-color 0.3s ease; /* Transición suave del color de fondo */
+}
+
+.scanButton:hover {
+  background-color: rgb(215, 30, 30);; /* Color azul ligeramente más oscuro al pasar el cursor */
+}

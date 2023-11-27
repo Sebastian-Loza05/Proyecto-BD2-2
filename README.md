@@ -25,7 +25,7 @@ Sin indexación, una consulta de búsqueda requeriría escanear cada documento e
 ## Backend
 ### Índice Invertido
 El código presentado es para construir un índice invertido para un conjunto de documentos, en este caso, canciones de Spotify, utilizando el algoritmo SPIMI (Single-pass in-memory indexing). Se usan las principales librerías
-```
+```python
 import math
 import pickle
 import os
@@ -35,7 +35,7 @@ nltk.download('punkt')
 ```
 ### Preprocesamiento de texto
 Se establecen stopwords en inglés y español, además de stemmers para procesar el texto y dejarlo en un formato estandarizado. La función preprocess_text lleva a cabo este proceso. La función devuelve el texto preprocesado como una cadena de caracteres con tokens separados por espacios. Se aplica Stemming que es una técnica de procesamiento del lenguaje natural que se utiliza para reducir las palabras a su raíz o forma base. Por ejemplo, "running" se convierte en "run". 
-```
+```python
 stop_words = set(stopwords.words('english')).union(set(stopwords.words('spanish')))
 block_num = 0
 stemmer_english = SnowballStemmer('english')
@@ -51,121 +51,44 @@ def preprocess_text(text):
 ```
 
 ### SPIMI
-La función spimi_invert construye índices invertidos en bloques utilizando el algoritmo SPIMI. Esta función toma como entrada la lista de documentos y, para cada documento, construye una lista de términos (o tokens) y su frecuencia de aparición. Los bloques de índice invertido se escriben en el disco cuando se alcanza un límite específico de memorias definido por page_size.
-Se inicializan variables para mantener el índice invertido (inv_index), las listas de publicaciones (posting_lists), y otros contadores.
-Se itera sobre cada documento en docs:
-
+La función spimi_invert construye índices invertidos en bloques utilizando el algoritmo SPIMI. La función generate_tfw(docs) toma como entrada la lista de documentos y, para cada documento, construye una lista de términos (o tokens) para construir in primer índice que sólo tendrá las frecuencias de los términos en cada documento. Para esto hace lo siguiente:
 - Para cada documento, se cuentan las ocurrencias de cada término usando la clase Counter.
 - Luego, para cada término y su frecuencia en el documento:
   
-Se verifica si el tamaño total de inv_index y posting_lists cuando se convierten a formato pickle supera el page_size. Si es así, se escribe el contenido actual de inv_index y posting_lists en el disco y se reinician estas estructuras.
+Se agrega el término a un diccionario inv_index con la key como el término y su value una lista que tiene 2 valores: El df (frecuencia de documento) y el num_bloque (el num de bloque donde estará su posting list), además que se agrega  a su posting list que es un diccionario el id del documento y tf_suavizado respectivo. En el caso ocurra que agregar este nuevo término al inv_index hace que se supere el límite de RAM disponible para el índice no se agrega y se escribe en memoria secundaria.
 
-- Luego, se verifica si el término ya está en el índice invertido. Si no está, se añade al índice y se crea una nueva lista de publicaciones para ese término. Si ya está, se actualiza la lista de publicaciones con la frecuencia del término para el documento actual.
+En caso el término ya pertenezca al índice invertido se agrega el nuevo documento al posting list y se aumenta el df del término.
   
-Al final de la función, se devuelve el contador indice, que representa la cantidad total de índices o bloques generados.
-```
-def generate_tfw(docs):
-    inv_index = {}
-    posting_lists = []
-    block_num = 0
-    last_block_num = 0
-    indice = 0
+Al final de la función, se devuelve la cantidad de bloques escritos en memoria secundaria.
 
-    for doc_id, doc in enumerate(docs):
-        terms = doc.split(' ')
-        terms_counted = Counter(terms)
-        # print(doc_id, ": ", Counter(terms))
+El código está [aquí](/backend/indiceInvertido.py#generate-tfw-docs)
 
-        for term, freq in terms_counted.items():
-            tamaño = len(pickle.dumps(inv_index)) + len(pickle.dumps(posting_lists))
-            if tamaño > page_size:
-                write_to_disk(inv_index, posting_lists, indice, last_block_num)
-                indice += 1
-                last_block_num = block_num
-                inv_index.clear()
-                posting_lists.clear()
-
-            if term not in inv_index:
-                inv_index[term] = [1, block_num]  # [df, block_num]
-                block_num += 1
-                posting_lists.append({'next': -1, doc_id: score_tf(freq)})
-            else:
-                posting_lists[inv_index[term][1] - last_block_num][doc_id] = score_tf(freq)
-                inv_index[term][0] += 1
-    print(block_num, indice)
-    return indice
-```
 ### Merge
-La función merge_blocks es la responsable de fusionar bloques más pequeños del índice invertido en un índice invertido más grande. Las listas de publicaciones de términos coincidentes en diferentes bloques se combinan para crear una única lista de publicaciones para ese término en el nuevo índice invertido fusionado. Después de fusionar dos bloques de índices invertidos, se eliminan los archivos originales para conservar espacio y evitar confusiones.
-```
-def merge_blocks(indices):
-    new_inv_idx = {}
-    for i in range(indices):
-        inv_index1 = {}
-        with open(f"indices/indice_invertido{i}.pkl", "rb") as file:
-            inv_index1 = pickle.load(file)
-            json_index1 = json.dumps(inv_index1, indent=3)
-        if os.path.exists(f"indices/indice_invertido{i}.pkl"):
-            print("eiminando")
-            os.remove(f"indices/indice_invertido{i}.pkl")
-        for j in range(i):
-            inv_index2 = {}
-            with open(f"indices/indice_invertido{j}.pkl", "rb") as file:
-                inv_index2 = pickle.load(file)
-                json_index2 = json.dumps(inv_index2, indent=3)
-            if os.path.exists(f"indices/indice_invertido{j}.pkl"):
-                print("eiminando")
-                os.remove(f"indices/indice_invertido{j}.pkl")
-            w = 0
-            for x in range(len(inv_index1.keys())):
-                term1 = inv_index1.keys()[x]
-                term2 = inv_index2.keys()[w]
-                if term1 < term2:
-                    new_inv_idx[term1] = inv_index1[term1]
-                elif term1 > term2:
-                    new_inv_idx[term2] = inv_index2[term2]
-                    w += 1
-                else:
-                    new_inv_idx[term1] = [
-                        inv_index1[term1][0] + inv_index2[term2][0],
-                        inv_index2[term2][1]
-                    ]
-                    w += 1
-                    bloque1 = inv_index1[term1][1]
-                    bloque2 = inv_index2[term2][1]
-                    postings1 = {}
-                    postings2 = {}
-                    with open(f"blocks/bloque{bloque1}", 'rb') as posting1, open(f"blocks/bloque{bloque2}", 'rb') as posting2:
-                        postings1 = pickle.load(posting1)
-                        postings2 = pickle.load(posting2)
-                    del postings1['next']
-                    postings3 = {**postings2, **postings1}
-```
+Para el merge se realizan distintas operaciones separadas en distintas funciones (*merge()*, *merge_interno()*, *combine_indices()*, *combine_blocks()*, *actualizar_tf_idf()*, *actualizar_block()*)
+- Merge()
+  
+  Esta función va a ejecutarse mientras hayan bloques sin mergearse. Es decir, mientras existan archivos dentro de nuestra carpeta "indices" se llamará a una función *merge_interno()*. Uana vez que se termine de mergearse, se tendrá en nuestra carpeta final a los bloques que contienen a nuestro índice ya mergeado y se empezará a crear la norma a su vez que se actualizarán los valores idf final para cada token ya que ya se tiene un índice con todos los tokens y que se repiten una sóla vez y con su valor final del df (document frequency), esto se hará en *actualizar_tf_idf(norma)*. Puedes encontrar el código [aquí](/backend/indiceInvertido.py#merge)
+- merge_interno()
+
+  Esta es una de las funciones principales. Aquí se mergeará a todos los índices ya mergeados con el nuevo índice sin mergear para el cuál se ha llamado esta función. Se recorrerá a todos los archivos en la carpeta de índices mergeados y al mergearse se escribirán dentro de otra carpeta auxiliar dnde se escribirá el resultado, cuando esta función sea llamada nuevamente la carpeta de índices mergeados será esta carpeta auxiliar y se usará como auxiliar a la carpeta que antes fue la carpeta de índices mergeados, y así se intercalará en cada llamada a la función. Esta función usa la lógica normal para mergear 2 diccionarios, pero cuando encuentra tokens que son iguales, tiene que usar una lógica un poco más compleja para también mergear a los bloques que tienen asociados cada uno. A su vez que va verifiando si el tamaño del indice local, más el tamaño de un bloque de posting lists supera el tamaño máximo permitido por la RAM y se escribe en el bloque auxiliar. Puedes encontrar el código [aquí](/backend/indiceInvertido.py#merge-interno)
+- combine_indices()
+
+  En esta función se se combinan ls bloques de las postings list de un token que se ha combinado en el mergeo de nuestro índice invertido, en caso se sobrapase el límite permitido en una posting list, se escribe en memoria secundaria y se encadena un nuevo bloque para así poder seguir ingresando los postings/documentos correspondientes al token que se ha mergeado, esto se hace en la función *combine_blocks()*. Puedes encontrar el código [aquí](/backend/indiceInvertido.py#combine-indices)
+
+- actualizar_tf_idf()
+
+  En esta función se leeran todos los bloques en memoria secundaria y se irán actualizando el valor idf y se pondrá en la primera posición de la lista que representa al value de cada token. Seguido de eso se llamará a una función *actualizar_bloque(num_bloque, idf, norma)* para cada token. Puedes encontrar el código [aquí](/backend/indiceInvertido.py#actualizar-tf-idf)
+
+- actualizar_bloque()
+
+  Esta es una función recursiva que abrirá a todos los bloques encadenados asociados al token para el que fue llamado la función y se actualizará el valor de tf para cada documento asociado a ese token en ese bloque con el valor de tf*idf y se volverá a escribir en en el mismo archivo. También se irá calculando el valor para la norma de cada documento. Puedes encontrar el código [aquí](/backend/indiceInvertido.py#actualizar-block)
+
 
 ### Similitud Coseno
-El método score_documents toma como parámetros una consulta (query) y un índice invertido fusionado (merged_index). Luego, se divide la consulta en términos individuales y se inicializa un diccionario doc_scores para almacenar los scores de los documentos. Para cada término en la consulta, si el término está en el índice invertido, se itera a través de las listas de publicación (documentos que contienen el término) y se acumula el valor de TF-IDF para ese término en el score del documento.
-Luego, se normaliza el score del documento dividiendo el score acumulado por la longitud del documento. Finalmente, se multiplica el score del documento por la cantidad de términos de la consulta que coinciden con el documento. Esto es un factor adicional para aumentar el score de los documentos que contienen más términos de la consulta.
-```
-def score_documents(query, merged_index):
-    print("APLICANDO COSINE...")
-    query_terms = query.split()
-    doc_scores = defaultdict(float)
+Para la similitud por coseno usamos la función *binary-recollection()* para cada token perteneciente a la consulta textual. Para esto previamente hemos calculado los valores tf-suavizados de ls términos de la query. El *binary_recollection()* nos ayuda a obtener los número de bloques de los tokens haciendo una búsqueda binaria en el índice invertido en memora secundaria para así no traer todos los bloques a la RAM. Luego de haber obtenido los número de bloques de cada término de la query en el índice invertido podemos leerlos y con el tf-idf que tenemos guardado y con los valores de la norma, de cada documento aplicamos la fórmula de la similitud de coseno:
 
-    for term in query_terms:
-        if term in merged_index:
-            for doc_id, doc_data in merged_index[term]["postings"].items():
-                doc_weight = doc_data['tf-idf']
-                doc_scores[doc_id] += doc_weight
+![cosine](https://pro.arcgis.com/es/pro-app/latest/tool-reference/spatial-statistics/GUID-A1FF8E27-581F-4980-AEE0-2BA2215B85DA-web.png)
 
-    for doc_id, score in doc_scores.items():
-        doc_length = sum([doc_data['tf-idf']**2 for term in merged_index if doc_id in merged_index[term]["postings"]])**0.5  
-        if doc_length > 0:
-            doc_scores[doc_id] /= doc_length
-
-        terms_matched = sum([1 for term in query_terms if term in merged_index and doc_id in merged_index[term]["postings"]])  
-        doc_scores[doc_id] *= terms_matched
-    return doc_scores
-```
 ### Estructura y Ejecución del índice
 ![Estructura y Ejecución del índice](info-retrieval/public/indice.jpeg)
 ### Indice en PostgresSQL
@@ -182,69 +105,105 @@ Conversión a tsvector:
 - Creación del Índice:
 
     - Se crea un índice usando la extensión gin (Generalized Inverted Index) en la columna combined_text. Esto permite búsquedas rápidas de texto completo en la columna combined_text
-```
-CREATE TABLE IF NOT EXISTS songslist (
-    track_id VARCHAR(255) PRIMARY KEY,
-    track_name VARCHAR(255),
-    track_artist VARCHAR(255),
-    lyrics TEXT,
-    track_popularity INTEGER,
-    track_album_id VARCHAR(255),
-    ... Demas campos
-);
-COPY songslist(track_id, track_name, track_artist, lyrics, track_popularity, track_album_id, track_album_name, track_album_release_date, playlist_name, playlist_id, playlist_genre, playlist_subgenre, danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, language)
-FROM 'E:\BD2\PROYECTO2\Proyecto-BD2-2\backend\spotify.csv' DELIMITER ',' CSV HEADER;
-ALTER TABLE songslist ADD COLUMN combined_text TEXT;
-UPDATE songslist
-SET combined_text = 
-    COALESCE(track_id, '') || ' ' ||
-    COALESCE(track_name, '') || ' ' ||
-    COALESCE(track_artist, '') || ' ' ||
-    COALESCE(lyrics, '') || ' ' ||
-    COALESCE(track_popularity::TEXT, '') || ' ' ||
-    COALESCE(track_album_id, '') || ' ' ||
-    COALESCE(track_album_name, '') || ' ' ||
-    ... Demas campos
+```sql
 UPDATE songslist
 SET combined_text = TRIM(BOTH ' ' FROM combined_text);
+
 ALTER TABLE songslist ADD COLUMN full_text tsvector;
+
 UPDATE songslist SET full_text = T.full_text
 FROM (
     SELECT track_id, setweight(to_tsvector('english', combined_text), 'A') AS full_text
     FROM songslist
 ) T
 WHERE T.track_id = songslist.track_id;
-CREATE INDEX text_search_idx ON songslist USING gin(combined_text gin_trgm_ops);
-SELECT track_id, track_artist, lyrics, ts_rank_cd(full_text, query) AS rank
-FROM songslist, to_tsquery('english', 'Don|Omar') query
-WHERE query @@ full_text
-ORDER BY rank ASC
-LIMIT 100;
 ```
-La función de búsqueda toma una consulta Q y un número k para devolver los k resultados superiores basados en la coincidencia de texto completo. La consulta se divide y se reformatea para adaptarse a la función to_tsquery. La consulta SQL busca coincidencias en la columna full_text y devuelve artistas, nombres de canciones y una puntuación de coincidencia (rank).
-```
-def search(Q, k):
-    query = Q.split(" ")
-    query = '|'.join(query)
-    top_k = k
-    start = time.time()
-    cur.execute(f"""
-        SELECT track_artist, track_name, ts_rank_cd(full_text, query, 1) AS rank
-        FROM songslist, to_tsquery('english', '{query}') query
-        WHERE query @@ full_text
-        ORDER BY rank ASC
-        LIMIT {top_k};
-    """)
 
-    end = time.time()
-    result = cur.fetchall()
-    conn.commit()
-    conn.close()
-    for row in result:
-        print(row)
-    print("Tiempo de ejecucion :",
-          (end - start) * 10 ** 3, "ms")
+La función de búsqueda toma una consulta Q y un número k para devolver los k resultados superiores basados en la coincidencia de texto completo. La consulta se divide y se reformatea para adaptarse a la función to_tsquery. La consulta SQL busca coincidencias en la columna full_text y devuelve artistas, nombres de canciones y una puntuación de coincidencia (rank).
+
+### MFCC
+Para la obtención de los vectores característicos que representen a cada canción que indexaremos usamos los Coeficientes Cepstrales de las frecuencias de Mel (MFCC). Normalmente se usan 13 coeficientes, ya que empíricamente se ha determinado que es la cantidad recomendable para una buena presición en la extracción de las características. Sin embargo, nosotros usaremos 20, ya que para la extracción de características en música es recomendable usar más coeficientes, cómo mínimo 20. 
+
+En este caso usamos la librería librosa para obtener los vectores característicos de las canciones, y seteamos el parámetro de n_mfcc=20. Esto nos retorna un vector de dimensión variable. Su estructura básica es un vector de 20 subvectores:
 ```
+<
+    [123, 523,...],
+    [123, 324,...],
+    .
+    .
+    .
+    [223, 234,...]
+>
+```
+Cada subvector representa cada uno de los 20 coeficientes. Los valores de cada subvector vendrían a ser los valores que toman cada coeficiente en un periodo de tiempo determinado. Es decir, que el primer elemento '123' es el valor que toma el primer coeficiente en una ventana de los primeros 20 milisegundos, El segundo valor para los siguientes 20 milisegundos, y así hasta completar la canción. Es por esto q la dimensíón del vector puede variar dependiendo de la longitud de la canción.
+
+### Sequential
+
+El algoritmo KNN secuencial utiliza un diccionario que contiene los vectores característicos de cada canción. Al realizar una query, el algoritmo compara el vector característico de esa canción con los vectores característicos de cada canción en la colección mediante el cálculo de la distancia euclidiana con n = 20 donde n consiste en la dimensión del vector característico. Conforme se van calculando las distancias, estas son agregadas a un array de distancias para posteriormente ordenarlas, y retornando los n primeros valores.  
+
+![Sequential](https://ilmudatapy.com/wp-content/uploads/2020/11/knn-2.png)
+
+```python
+def knn_search(query, C, k):
+    distances = []
+
+    for track_id, punto_info in C.items():
+        vector = punto_info["MFCC_Vector"]
+        distance = euclidean_distance(query, vector)
+        distances.append((distance, track_id))
+
+    distances.sort(key=lambda x: x[0])
+
+    neighbors = distances[:k]  
+
+    return neighbors
+```
+
+Por otro lado, para la implementación de búsqueda por rango, al igual que el algoritmo anterior compara el vector característico de la query con los vectores característicos de la colección mediante el cálculo de la distancia euclidiana para luego evaluar las distancias con un radio determinado por el usuario, si la distancia se encuentra dentro del radio la canción es añadida al array de resultados.  
+
+```python
+
+def range_search(query, C, radius):
+    results = []
+
+    for track_id, punto_info in C.items():
+        vector = punto_info["MFCC_Vector"]
+        distance = euclidean_distance(query, vector)
+
+        if distance <= radius:
+            results.append((distance, track_id))
+
+    return results
+
+```
+
+
+### Rtree
+Usamos la librería rtree de python. Para esto necesitamos los puntos que serían los vectores característcos de las canciones que vamos a indexar, pero todos deben de tener la misma dimensión. El rtree en python debe tener ciertas características como los archivos en los que se va a escribir el índice, la dimensión, etc. 
+```python
+def create_indexRtree(mfccs_vector=None):
+    prop = index.Property()
+    prop.dimension = 20
+    prop.buffering_capacity = 2 * 20
+    prop.storage = index.RT_Disk
+    prop.overwrite = False
+    if os.path.exists("puntos.dat") and os.path.exists("puntos.idx"):
+        idx = index.Rtree('puntos', properties=prop)
+        return idx
+    prop.dat_extension = 'dat'
+    prop.idx_extension = 'idx'
+    indx = index.Index('puntos', properties=prop)
+    for i, p in enumerate(mfccs_vector):
+        indx.insert(i, p)
+    return indx
+
+```
+![Rtree](https://media.geeksforgeeks.org/wp-content/uploads/20190412142437/R-tree.png)
+
+En este caso mfccs_vector es una lista con todos los puntos que vamos a ingresar y en el caso de que nuestro índice ya esté creado este parámetro sería None ya que el índice rtree sería cargado de los archivos. La dimensión es 20 al igual que la de los vectores que vamos a indexar. Definimos que el índice se va a guardar en el disco y q no se va a sobreescribir. Como nosotros construiremos el índice sólo una vez, no es muy importante el valor del buffering capacity ya que este sólo influirá en el rendimineto de la construcción del índice al insertar todos los valores.
+
+Los vectores mfccs que usamos para el rtree son de dimensión 20. Como ya detallamos la dimensión de los vectores obtenidos por la librería **librosa**, para el caso del rtree, obtenemos el promedio de cada uno de los coeficientes con respecto a todas las "ventanas" (periodos de tiempo) obtenidos, y así al final cada vector tendrá sólo 20 valores, que sería la nueva dimensión.
+
 ### KNN-HighD
 
 #### IndexLSK

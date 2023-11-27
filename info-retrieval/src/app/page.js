@@ -5,8 +5,12 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useState } from 'react';
 import Results from '@/components/results';
 import { getTopKByInvert, getTopKByPostgres } from './api';
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
+
+  const router = useRouter()
+
   const [formData, setFormData] = useState({
     textQuery: '',
     topK: 0,
@@ -88,6 +92,7 @@ export default function Home() {
               </select>
             </label>
             <button type="submit"> Enviar </button>
+            <button type="button" onClick={() => router.push('/spoti')}>Ir a spotify</button>
           </form>
         </section>
         <section className={styles.results}>
