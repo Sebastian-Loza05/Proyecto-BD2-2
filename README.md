@@ -85,8 +85,8 @@ Para el merge se realizan distintas operaciones separadas en distintas funciones
 
 
 ### Similitud Coseno
-El método score_documents toma como parámetros una consulta (query) y un índice invertido fusionado (merged_index). Luego, se divide la consulta en términos individuales y se inicializa un diccionario doc_scores para almacenar los scores de los documentos. Para cada término en la consulta, si el término está en el índice invertido, se itera a través de las listas de publicación (documentos que contienen el término) y se acumula el valor de TF-IDF para ese término en el score del documento.
-Luego, se normaliza el score del documento dividiendo el score acumulado por la longitud del documento. Finalmente, se multiplica el score del documento por la cantidad de términos de la consulta que coinciden con el documento. Esto es un factor adicional para aumentar el score de los documentos que contienen más términos de la consulta.
+Para la similitud por coseno usamos la función *binary-recollection()* para cada token perteneciente a la consulta textual. Para esto previamente hemos calculado los valores tf-suavizados de ls términos de la query. El *binary_recollection()* nos ayuda a obtener los número de bloques de los tokens haciendo una búsqueda binaria en el índice invertido en memora secundaria para así no traer todos los bloques a la RAM. Luego de haber obtenido los número de bloques de cada término de la query en el índice invertido podemos leerlos y con el tf-idf que tenemos guardado y con los valores de la norma, de cada documento aplicamos la fórmula de la similitud de coseno: 
+![cosine](https://www.google.com/url?sa=i&url=http%3A%2F%2Fresearch.unir.net%2Funesco-congreso%2Fwp-content%2Fuploads%2Fsites%2F76%2F2016%2F06%2F6-Distributed-processing-using-cosine-similarity-for-mapping-Big-Data-in-Hadoop1.pdf&psig=AOvVaw2yzt55Mur48iWDDmYgr4Nl&ust=1701151244707000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCKiZtMLA44IDFQAAAAAdAAAAABAE)
 
 ### Estructura y Ejecución del índice
 ![Estructura y Ejecución del índice](info-retrieval/public/indice.jpeg)
