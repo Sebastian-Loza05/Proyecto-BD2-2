@@ -122,7 +122,9 @@ WHERE T.track_id = songslist.track_id;
 La función de búsqueda toma una consulta Q y un número k para devolver los k resultados superiores basados en la coincidencia de texto completo. La consulta se divide y se reformatea para adaptarse a la función to_tsquery. La consulta SQL busca coincidencias en la columna full_text y devuelve artistas, nombres de canciones y una puntuación de coincidencia (rank).
 
 ### MFCC
-Para la obtención de los vectores característicos que representen a cada canción que indexaremos, usamos los Coeficientes Cepstrales de las frecuencias de Mel (MFCC). Normalmente se usan 13 coeficientes, ya que empíricamente se ha determinado que es la cantidad recomendable para una buena presición en la extracción de las características. Sin embargo, nosotros usaremos 20, ya que para la extracción de características en música es recomendable usar más coeficientes, cómo mínimo 20. En este caso usamos la librería librosa para obtener los vectores característicos de las canciones, y seteamos el parámetro de n_mfcc=20. Esto nos retorna un vector de dimensión variable. Su estructura básica es un vectore de 20 subvectores:
+Para la obtención de los vectores característicos que representen a cada canción que indexaremos usamos los Coeficientes Cepstrales de las frecuencias de Mel (MFCC). Normalmente se usan 13 coeficientes, ya que empíricamente se ha determinado que es la cantidad recomendable para una buena presición en la extracción de las características. Sin embargo, nosotros usaremos 20, ya que para la extracción de características en música es recomendable usar más coeficientes, cómo mínimo 20. 
+
+En este caso usamos la librería librosa para obtener los vectores característicos de las canciones, y seteamos el parámetro de n_mfcc=20. Esto nos retorna un vector de dimensión variable. Su estructura básica es un vector de 20 subvectores:
 ```
 <
     [123, 523,...],
