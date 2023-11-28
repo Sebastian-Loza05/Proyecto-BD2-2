@@ -36,6 +36,7 @@ def knn_searchS(query, C, k):
 
     for track_id, punto_info in C.items():
         vector = punto_info["MFCC_Vector"]
+        print(vector)
         distance = euclidean_distance(query, vector)
         distances.append((distance, track_id))
 

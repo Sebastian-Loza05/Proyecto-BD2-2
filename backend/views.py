@@ -43,7 +43,9 @@ def sec_knn():
         query = get_mfcc_vector(save_file)
         os.remove(save_file)
 
+        print("faf")
         result = knn_searchS(query, puntos, top_k)
+        print("faf")
         response = []
         for distance, track_id in result:
             punto_info = puntos[track_id]
