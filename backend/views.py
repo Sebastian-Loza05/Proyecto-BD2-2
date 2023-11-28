@@ -15,6 +15,93 @@ from indice_multidimensional.indice import (
     vectorize
 )
 
+from indice_multidimensional.Sec_Rango import (
+    load_dataframes,
+    get_mfcc_vector,
+    knn_searchS,
+    range_search
+)
+
+@app.route('/knn_search', methods=['POST'])
+def sec_knn():
+    error_422 = False
+    try:
+        audio = request.files['audio']
+        if not audio:
+            error_422 = True
+            abort(422)
+
+        data = request.form.get('json')
+        json_data = json.loads(data)
+        top_k = json_data['topK']
+
+        save_file = f'uploads/{audio.filename}'
+        audio.save(save_file)
+        puntos = load_dataframes()
+        query = get_mfcc_vector(save_file)
+        os.remove(save_file)
+
+        result = knn_searchS(query, puntos, top_k)
+        response = []
+        for distance, track_id in result:
+            punto_info = puntos[track_id]
+            response.append({
+                "track_name": punto_info["track_name"],
+                "track_preview": punto_info["track_preview"]
+            })
+
+        return jsonify({
+            'success': True,
+            'result': response
+        })
+
+    except Exception as e:
+        print(e)
+        if error_422:
+            abort(422)
+        else:
+            abort(500)
+
+@app.route('/range_search', methods=['POST'])
+def sec_rango():
+    error_422 = False
+    try:
+        audio = request.files['audio']
+        if not audio:
+            error_422 = True
+            abort(422)
+
+        data = request.form.get('json')
+        json_data = json.loads(data)
+        top_k = json_data['topK']
+
+        save_file = f'uploads/{audio.filename}'
+        audio.save(save_file)
+        puntos = load_dataframes()
+        query = get_mfcc_vector(save_file)
+        os.remove(save_file)
+
+        result = range_search(query, puntos, top_k)
+        response = []
+        for distance, track_id in result:
+            punto_info = puntos[track_id]
+            response.append({
+                "track_name": punto_info["track_name"],
+                "track_preview": punto_info["track_preview"]
+            })
+
+        return jsonify({
+            'success': True,
+            'result': response
+        })
+
+    except Exception as e:
+        print(e)
+        if error_422:
+            abort(422)
+        else:
+            abort(500)
+
 @app.route('/faiss', methods=['POST'])
 def search_faissa():
     error_422 = False
@@ -31,9 +118,9 @@ def search_faissa():
 
         save_file = f'uploads/{audio.filename}'
         audio.save(save_file)
-        ffmpeg.input(save_file).output(output).run()
+        # ffmpeg.input(save_file).output(output).run()
+        vector = vectorize(save_file)
         os.remove(save_file)
-        vector = vectorize(output)
         # vector = get_vector(output)
         vector = np.array(vector)
         # print(vector[-1])
@@ -44,7 +131,7 @@ def search_faissa():
         print(vector)
         response = faiss_search(vector, top_k)
 
-        os.remove(output)
+        # os.remove(output)
         return jsonify({
             'success': True,
             'results': response
@@ -73,12 +160,12 @@ def search_rtree():
 
         save_file = f'uploads/{audio.filename}'
         audio.save(save_file)
-        ffmpeg.input(save_file).output(output).run()
+        # ffmpeg.input(save_file).output(output).run()
+        # vector = get_vector(save_file)
+        vector = vectorize(save_file)
         os.remove(save_file)
-        # vector = get_vector(output)
-        vector = vectorize(output)
         response = knn_search(vector, top_k)
-        os.remove(output)
+        # os.remove(output)
         return jsonify({
             'success': True,
             'results': response
