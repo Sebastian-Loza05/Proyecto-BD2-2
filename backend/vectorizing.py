@@ -3,7 +3,7 @@ import pandas as pd
 import librosa
 
 # 30
-path = 'musicas/'
+path = 'actual_music/'
 
 def load_dataframes():
     df = pd.read_csv("indice_multidimensional/complete_spotify.csv", on_bad_lines="skip")
@@ -12,20 +12,15 @@ def load_dataframes():
 
 def vectorize(filename):
     x, sr = librosa.load(filename)
-    mfccs = librosa.feature.mfcc(y=x, sr=sr, n_mfcc=20)
+    mfccs = librosa.feature.mfcc(y=x, sr=sr, n_mfcc=20, hop_length=512)
+    # mfccs = librosa.feature.mfcc(y=x, sr=sr, n_mfcc=20, hop_length=742000)
     res = []
+    # 2.- PCA
     for coef in mfccs:
-        rango = len(coef) // 5
-        inicio = 0
-        for i in range(5):
-            if (len(coef[inicio + rango:]) < rango):
-                li = coef[inicio:]
-                res.append(sum(li) / len(li))
-                break
-            li = coef[inicio:inicio + rango]
-            res.append(sum(li) / len(li))
-            inicio += rango
-    if (len(res) != 100):
+        for dato in coef:
+            res.append(dato)
+    print(len(res))
+    if (len(res) != 20):
         print("ERROR: ", filename)
         exit(0)
     return res
@@ -38,7 +33,6 @@ def main():
         str_vector = str(vector)
         print(filedirection)
         df.loc[df["mp3 File"] == filedirection.replace("/", "\\"), "vectores_100"] = str_vector
-        break
     df.to_csv("indice_multidimensional/spotify_final.csv", index=False)
 
 

@@ -75,8 +75,9 @@ def search_rtree():
         audio.save(save_file)
         ffmpeg.input(save_file).output(output).run()
         os.remove(save_file)
-        # vector = get_vector(output)
-        vector = vectorize(output)
+        vector = get_vector(output)
+        print(vector)
+        # vector = vectorize(output)
         response = knn_search(vector, top_k)
         os.remove(output)
         return jsonify({

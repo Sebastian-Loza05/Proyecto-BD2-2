@@ -51,7 +51,7 @@ def vectorize(filename):
 
 def create_indexRtree(mfccs_vector):
     prop = index.Property()
-    prop.dimension = 40
+    prop.dimension = 20
     prop.buffering_capacity = 2 * 20
     prop.storage = index.RT_Disk
     prop.overwrite = False
@@ -68,21 +68,19 @@ def create_indexRtree(mfccs_vector):
 
 def knn_search(point, k):
     mfcss_vectors = {}
-    df = load_dataframesF()
+    df = load_dataframes()
     puntos = []
     for i, fila in df.iterrows():
         mfcss_vectors[i] = fila
         # punto = fila["MFCC_Vector"].replace("[", "").replace("]", "").replace("\n", "").split(" ")
-
-        punto = fila["vectores_100"].replace("[", "").replace("]", "").replace("\n", "").split(",")
-        if len(punto) == 40:
-            punto = [float(x) for x in punto]
-            puntos.append(punto)
+        #
+        # # punto = fila["vectores_100"].replace("[", "").replace("]", "").replace("\n", "").split(",")
+        # if len(punto) == 20:
+        #     punto = [float(x) for x in punto]
+        #     puntos.append(punto)
 
     indx = create_indexRtree(puntos)
-    print("amen")
     results = list(indx.nearest(coordinates=point, num_results=k))
-    print("amen")
     print(results)
     response = []
     for i in results:
@@ -159,7 +157,7 @@ def create_indexFaiss(mfcss_vectors=None):
     # return index
 
 def faiss_search(vec, topk):
-    df = load_dataframesF()
+    df = load_dataframes()
     mfcss_vectors = {}
     for i, fila in df.iterrows():
         mfcss_vectors[i] = fila

@@ -170,5 +170,8 @@ backend/indices
 backend/blocks
 backend/indicesF1
 backend/indicesF2
+backend/actual_music/
 
 backend/puntosFaiss.index
+
+backend/indice_multidimensional/spotify_final.csv
