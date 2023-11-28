@@ -424,8 +424,8 @@ def get_spotify_docs(query, topk):
 
 
 # Main
-# canciones = load_full_dataframe()
-# docs = canciones['processed_text'].tolist()
-# cantidad_bloques = generate_tfw(docs)
-# merge(cantidad_bloques)
-# print(documentos_topK("I'm trying to reach goals", 10))
+canciones = load_full_dataframe()
+docs = canciones['processed_text'].tolist()
+cantidad_bloques = generate_tfw(docs)
+merge(cantidad_bloques)
+print(documentos_topK("I'm trying to reach goals", 10))
