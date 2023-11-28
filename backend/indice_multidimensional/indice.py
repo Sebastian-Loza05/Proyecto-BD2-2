@@ -72,18 +72,21 @@ def knn_search(point, k):
         # if len(punto) == 20:
         #     punto = [float(x) for x in punto]
         #     puntos.append(punto)
-
     indx = create_indexRtree(puntos)
-    results = list(indx.nearest(coordinates=point, num_results=k))
-    print(results)
+    results = list(indx.nearest(coordinates=point, num_results=int(k)))
     response = []
     for i in results:
         mf = mfcss_vectors[i]
         response.append({
+            "track_id": mf["track_id"],
             "track_name": mf["track_name"],
-            "track_preview": mf["track_preview"]
+            "track_artist": mf["track_artist"],
+            "lyrics": mf["lyrics"],
+            "track_preview": mf["track_preview"],
+            "duration": 30000
         })
     indx.close()
+    print(response)
     return response
 
 def create_indexFaiss(mfcss_vectors=None):

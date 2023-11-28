@@ -61,7 +61,7 @@ def search_rtree():
 
     print("rtree")
     error_422 = False
-    output = "E:\\BD2\\PROYECTO2\\p2\\Proyecto-BD2-2\\backend\\uploads\\output.wav"
+    output = "uploads/output.wav"
     try:
         audio = request.files['audio']
         print(audio)
@@ -74,17 +74,16 @@ def search_rtree():
         top_k = json_data['topK']
         print(top_k)
 
-        save_file = f'E:\\BD2\\PROYECTO2\\p2\\Proyecto-BD2-2\\backend\\uploads\\{audio.filename}'
+        save_file = f'uploads/{audio.filename}'
         print(save_file)
         audio.save(save_file)
         ffmpeg.input(save_file).output(output).run()
         os.remove(save_file)
         vector = get_vector(output)
-        print(vector)
         # vector = vectorize(output)
         response = knn_search(vector, top_k)
         os.remove(output)
- 
+
         return jsonify(response)
 
     except Exception as e:
@@ -151,7 +150,7 @@ def get_spotify_token():
         })
     else:
         return jsonify({'message': 'Invalid code'}), 400
-    
+
 
 @app.route('/spotify/track/<track_id>', methods=['GET'])
 def get_track_details(track_id):
@@ -178,7 +177,7 @@ def get_track_details(track_id):
         print(f"Error fetching track details: {track_response.status_code}")
         print(f"Response: {track_response.json()}")
         return jsonify({'message': 'Could not fetch track details'}), 400
-    
+
 
 @app.route('/spotify/playlist/<playlist_id>', methods=['GET'])
 def get_playlist_tracks(playlist_id):

@@ -222,15 +222,33 @@ function Spoti() {
       });
   
       if (response.status === 200) {
-        const imagePromises = response.data.map(song => getTrackImageUrl(song.track_id));
-        const images = await Promise.all(imagePromises);
-        const searchResults = response.data.map((song) => ({
-          ...song,
-          duration: convertMsToMinutesSeconds(song.duration_ms),
-          imageUrl: images[index],
-          preview_url: song.preview_url
+        // console.log("asjfa");
+        // const imagePromises = response.data.map(song => getTrackImageUrl(song.track_id));
+        // const images = await Promise.all(imagePromises);
+        // console.log("asjfa");
+        // const searchResults = response.data.map((song) => ({
+        //   ...song,
+        //   duration: convertMsToMinutesSeconds(song.duration_ms),
+        //   imageUrl: images[index],
+        //   preview_url: song.preview_url
+        // }));
+        // console.log("asjfa");
+        // console.log(searchResults);
+        // setSongs(searchResults);
+        const songsData = response.data;
+        console.log('Canciones recibidas del backend:', songsData);
+
+        const songsWithImages = await Promise.all(songsData.map(async (song) => {
+          const trackInfo = await getTrackImageUrl(song.track_id);
+          return {
+            ...song,
+            duration: convertMsToMinutesSeconds(song.duration_ms),
+            imageUrl: trackInfo.image_url,
+            preview_url: song.track_preview,
+          };
         }));
-        setSongs(searchResults);
+        console.log('Canciones con imágenes:', songsWithImages);
+        setSongs(songsWithImages); // Actualiza el estado
       } else {
         console.error('Error en la búsqueda:', response.status);
       }

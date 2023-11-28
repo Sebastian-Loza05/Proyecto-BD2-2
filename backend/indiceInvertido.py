@@ -428,4 +428,4 @@ def get_spotify_docs(query, topk):
 # docs = canciones['processed_text'].tolist()
 # cantidad_bloques = generate_tfw(docs)
 # merge(cantidad_bloques)
-print(documentos_topK("feel alive", 10))
+# print(documentos_topK("feel alive", 10))
