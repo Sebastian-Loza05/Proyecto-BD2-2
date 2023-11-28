@@ -170,6 +170,8 @@ def search_rtree():
         # vector = get_vector(save_file)
         vector = vectorize(save_file)
         os.remove(save_file)
+        vector = get_vector(save_file)
+        print(vector)
         response = knn_search(vector, top_k)
 
         # os.remove(output)
@@ -258,10 +260,12 @@ def get_track_details(track_id):
     if track_response.status_code == 200:
         track_data = track_response.json()
         image_url = track_data['album']['images'][0]['url']  # Obtén la URL de la imagen más grande
+        preview_url = track_data.get('preview_url', None)
         return jsonify({
             'image_url': image_url,
             'name': track_data['name'],
-            'artists': [artist['name'] for artist in track_data['artists']]
+            'artists': [artist['name'] for artist in track_data['artists']],
+            'preview_url': preview_url
         })
     else:
         print(f"Error fetching track details: {track_response.status_code}")
@@ -291,6 +295,7 @@ def get_playlist_tracks(playlist_id):
                 'name': track['name'],
                 'artists': [artist['name'] for artist in track['artists']],
                 'duration_ms': track['duration_ms'],
+                'preview_url': track['preview_url'],
                 'album': {
                     'name': track['album']['name'],
                     'images': track['album']['images']

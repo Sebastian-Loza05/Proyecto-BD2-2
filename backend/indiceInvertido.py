@@ -23,7 +23,7 @@ CANTIDAD_DOCS = 18454
 # CANTIDAD_DOCS = 28
 NORMA = []
 RAM = 100000
-MAX_POSTINGS_LENGHT = 40
+MAX_POSTINGS_LENGHT = 30
 CARPETA = True
 DF = pd.read_csv('spotify.csv', on_bad_lines='skip')
 
@@ -424,8 +424,16 @@ def get_spotify_docs(query, topk):
 
 
 # Main
+<<<<<<< HEAD
 canciones = load_full_dataframe()
 docs = canciones['processed_text'].tolist()
 cantidad_bloques = generate_tfw(docs)
 merge(cantidad_bloques)
 print(documentos_topK("I'm trying to reach goals", 10))
+=======
+# canciones = load_full_dataframe()
+# docs = canciones['processed_text'].tolist()
+# cantidad_bloques = generate_tfw(docs)
+# merge(cantidad_bloques)
+print(documentos_topK("feel alive", 10))
+>>>>>>> 6b7af41dedae86345ddf9029850bc89e38d4df11

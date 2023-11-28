@@ -32,6 +32,7 @@ function Spoti() {
             track_artist: song.artists.join(", "),
             duration: convertMsToMinutesSeconds(song.duration_ms),
             imageUrl: song.album.images[0].url,
+            preview_url: song.preview_url,
             lyrics: 'From Éxitos Perú' // Ya que Spotify no provee letras
         }));
         
@@ -101,6 +102,8 @@ function Spoti() {
     }
   };
 
+ 
+
   const defaultRightContent = (
     <div className={styles.defaultRight}>
       <img src="https://cdn.discordapp.com/attachments/1155323431915630594/1178600841394016317/6532493.png?ex=6576bc91&is=65644791&hm=d5d99fef558ed5539b9ed9f59b1358d0d5a67fdd3d5a3c193c2b04247632f3dd&" alt="Bienvenido" className={styles.defaultImage} />
@@ -127,6 +130,10 @@ function Spoti() {
 
   const handleSongClick = (song) => {
     setSelectedSong(song);
+    const audioElement = document.getElementById('audio-preview');
+    audioElement.pause();
+    audioElement.currentTime = 0;
+    audioElement.src = song.preview_url;
   };
 
   const handleSearchChange = (e) => {
@@ -153,18 +160,21 @@ function Spoti() {
   
       const response = await axios.post(endpoint, {
         textQuery: searchText,
-        topK: searchNumber
+        topK: searchNumber,
       });
   
       if (response.status === 200) {
-        const imagePromises = response.data.map(song => getTrackImageUrl(song.track_id));
-        const images = await Promise.all(imagePromises);
+        const songPromises = response.data.map(async (song) => {
+          const { image_url, preview_url } = await getTrackImageUrl(song.track_id);
+          return {
+            ...song,
+            duration: convertMsToMinutesSeconds(song.duration_ms),
+            imageUrl: image_url,
+            preview_url: preview_url,
+          };
+        });
   
-        const updatedSongs = response.data.map((song, index) => ({
-          ...song,
-          duration: convertMsToMinutesSeconds(song.duration_ms),
-          imageUrl: images[index] // Asegúrate de que el orden de las imágenes coincida con el de las canciones
-        }));
+        const updatedSongs = await Promise.all(songPromises);
   
         setSongs(updatedSongs);
       } else {
@@ -217,7 +227,8 @@ function Spoti() {
         const searchResults = response.data.map((song) => ({
           ...song,
           duration: convertMsToMinutesSeconds(song.duration_ms),
-          imageUrl: images[index]
+          imageUrl: images[index],
+          preview_url: song.preview_url
         }));
         setSongs(searchResults);
       } else {
@@ -228,20 +239,21 @@ function Spoti() {
     }
   };
 
-  const getTrackImageUrl = async (trackId) => {
-    try {
-      const cleanedTrackId = trackId.trim(); // Esto eliminará los espacios al principio y al final
-      const response = await axios.get(`http://localhost:5000/spotify/track/${cleanedTrackId}`, {
-        headers: {
-          Authorization: `Bearer ${spotifyAccessToken}`,
-        },
-      });
-      return response.data.image_url;
-    } catch (error) {
-      console.error('Error al obtener la imagen del track:', error);
-      return ''; 
-    }
-  };
+// Modifica la función getTrackImageUrl para capturar la URL de imagen y preview
+const getTrackImageUrl = async (trackId) => {
+  try {
+    const cleanedTrackId = trackId.trim();
+    const response = await axios.get(`http://localhost:5000/spotify/track/${cleanedTrackId}`, {
+      headers: {
+        Authorization: `Bearer ${spotifyAccessToken}`,
+      },
+    });
+    return response.data; // Captura tanto la URL de imagen como la URL de preview
+  } catch (error) {
+    console.error('Error al obtener la imagen y el preview del track:', error);
+    return { image_url: '', preview_url: '' }; // Retorna ambas URLs vacías en caso de error
+  }
+};
 
   const defaultPlaylistImageUrl = "https://cdn.discordapp.com/attachments/1166998304937222166/1178931502222938122/music-playlist-icon-5.jpg?ex=6577f085&is=65657b85&hm=3f7283d17be86c77e169b855044f45e97402d6027b486d7fe0e61e6f0a4fca50&";
   
@@ -318,7 +330,7 @@ function Spoti() {
               
               <input
                 type="number"
-                placeholder="Top K"
+                placeholder="Top K - Radius"
                 value={searchNumber} 
                 onChange={handleNumberChange} 
                 className={styles.inputField}
@@ -357,6 +369,10 @@ function Spoti() {
                   <div className={styles.songArtist}>{selectedSong.track_artist}</div>
                   <div className={styles.songDuration}>{selectedSong.duration}</div>
                 </div>
+                <audio id="audio-preview" controls>
+                  <source src={selectedSong.preview_url} type="audio/mpeg" />
+                  Tu navegador no soporta el elemento de audio.
+                </audio>
                 <div className={styles.songLyrics}>
                   {selectedSong.lyrics}
                 </div>

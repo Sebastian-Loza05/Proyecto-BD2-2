@@ -295,7 +295,7 @@ Prueba en postman:
 ![Estructura y Ejecución del índice](info-retrieval/public/consulta.png)
 
 ## FrontEnd
-![Estructura y Ejecución del índice](info-retrieval/public/front.png)
-
-![Estructura y Ejecución del índice](info-retrieval/public/front2.png)
-
+![front1](IMG/front1.png)
+![front2](IMG/front2.png)
+![front3](IMG/front3.png)
+![front4](IMG/front4.png)
