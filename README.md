@@ -279,6 +279,10 @@ En base a todas estas consideraciones, me base mas en una velocidad optima de b�
 
 El quién tenia mejor tiempo de construcción estaba entre 8 y 16, no obstante el que tenia mejor tiempo de busqueda era el 16; y como la construcción no seria problema por tener guardado el indice. El `m` adecuado para este caso seria 16.
 
+### Experimento
+
+![tabla2](IMG/tabla2.png)
+
 ### FLASK API
 El archivo views.py es una parte central de la aplicación Flask que se encarga de definir y manejar las rutas o endpoints a los que se puede acceder. Estos endpoints permiten realizar con un índice invertido y una base de datos PostgreSQL. 
 Importaciones:
