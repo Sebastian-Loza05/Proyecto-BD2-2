@@ -1,9 +1,19 @@
 # Proyecto-BD2-2
 
+## Lista de Actividades
+
+| Integrante                         | Tareas                 |
+|-----------------------------------|------------------------------|
+| Coorahua Peña, Ruben Aaron        |                              |
+| Golac Córdova, Luis David         |                              |
+| Loza Mendoza, Sebastián           |                              |
+| Pajuelo Reyes, César Eduardo      |                              |
+| Rodríguez Gutiérrez, Gonzalo Alonso|                             |
+
 ## Introducción
 
 ### Objetivos
-El principal objetivo de este proyecto es implementar y entender el funcionamiento del índice invertido usando el modelo de recuperación por ranking para consultas de texto libre. Con esto, esperamos mejorar la velocidad y eficiencia de las búsquedas en grandes conjuntos de datos.
+El principal objetivo de este proyecto es implementar y entender el funcionamiento del índice invertido usando el modelo de recuperación por ranking para consultas de texto libre. Con esto, esperamos mejorar la velocidad y eficiencia de las búsquedas en grandes conjuntos de datos. Ademas de implementar un índice multidimencional utilizando diferentes algoritmos, permitiendo realizar una comparacion entre ellos.
 
 ### Objetivos Específicos:
 -  Construir óptimamente un Índice Invertido para tareas de búsqueda y recuperación en documentos de texto
@@ -51,7 +61,7 @@ def preprocess_text(text):
 ```
 
 ### SPIMI
-La función spimi_invert construye índices invertidos en bloques utilizando el algoritmo SPIMI. La función generate_tfw(docs) toma como entrada la lista de documentos y, para cada documento, construye una lista de términos (o tokens) para construir in primer índice que sólo tendrá las frecuencias de los términos en cada documento. Para esto hace lo siguiente:
+La función spimi_invert construye índices invertidos en bloques utilizando el algoritmo SPIMI. La función generate_tfw(docs) toma como entrada la lista de documentos y, para cada documento, construye una lista de términos (o tokens) para construir un primer índice que sólo tendrá las frecuencias de los términos en cada documento. Para esto hace lo siguiente:
 - Para cada documento, se cuentan las ocurrencias de cada término usando la clase Counter.
 - Luego, para cada término y su frecuencia en el documento:
   
@@ -67,13 +77,13 @@ El código está [aquí](/backend/indiceInvertido.py#generate-tfw-docs)
 Para el merge se realizan distintas operaciones separadas en distintas funciones (*merge()*, *merge_interno()*, *combine_indices()*, *combine_blocks()*, *actualizar_tf_idf()*, *actualizar_block()*)
 - Merge()
   
-  Esta función va a ejecutarse mientras hayan bloques sin mergearse. Es decir, mientras existan archivos dentro de nuestra carpeta "indices" se llamará a una función *merge_interno()*. Uana vez que se termine de mergearse, se tendrá en nuestra carpeta final a los bloques que contienen a nuestro índice ya mergeado y se empezará a crear la norma a su vez que se actualizarán los valores idf final para cada token ya que ya se tiene un índice con todos los tokens y que se repiten una sóla vez y con su valor final del df (document frequency), esto se hará en *actualizar_tf_idf(norma)*. Puedes encontrar el código [aquí](/backend/indiceInvertido.py#merge)
+  Esta función va a ejecutarse mientras hayan bloques sin mergearse. Es decir, mientras existan archivos dentro de nuestra carpeta "indices" se llamará a una función *merge_interno()*. Una vez que se termine de mergearse, se tendrá en nuestra carpeta final a los bloques que contienen a nuestro índice ya mergeado y se empezará a crear la norma a su vez que se actualizarán los valores idf final para cada token ya que ya se tiene un índice con todos los tokens y que se repiten una sóla vez y con su valor final del df (document frequency), esto se hará en *actualizar_tf_idf(norma)*. Puedes encontrar el código [aquí](/backend/indiceInvertido.py#merge)
 - merge_interno()
 
   Esta es una de las funciones principales. Aquí se mergeará a todos los índices ya mergeados con el nuevo índice sin mergear para el cuál se ha llamado esta función. Se recorrerá a todos los archivos en la carpeta de índices mergeados y al mergearse se escribirán dentro de otra carpeta auxiliar dnde se escribirá el resultado, cuando esta función sea llamada nuevamente la carpeta de índices mergeados será esta carpeta auxiliar y se usará como auxiliar a la carpeta que antes fue la carpeta de índices mergeados, y así se intercalará en cada llamada a la función. Esta función usa la lógica normal para mergear 2 diccionarios, pero cuando encuentra tokens que son iguales, tiene que usar una lógica un poco más compleja para también mergear a los bloques que tienen asociados cada uno. A su vez que va verifiando si el tamaño del indice local, más el tamaño de un bloque de posting lists supera el tamaño máximo permitido por la RAM y se escribe en el bloque auxiliar. Puedes encontrar el código [aquí](/backend/indiceInvertido.py#merge-interno)
 - combine_indices()
 
-  En esta función se se combinan ls bloques de las postings list de un token que se ha combinado en el mergeo de nuestro índice invertido, en caso se sobrapase el límite permitido en una posting list, se escribe en memoria secundaria y se encadena un nuevo bloque para así poder seguir ingresando los postings/documentos correspondientes al token que se ha mergeado, esto se hace en la función *combine_blocks()*. Puedes encontrar el código [aquí](/backend/indiceInvertido.py#combine-indices)
+  En esta función se combinan los bloques de las postings list de un token que se ha combinado en el mergeo de nuestro índice invertido, en caso se sobrapase el límite permitido en una posting list, se escribe en memoria secundaria y se encadena un nuevo bloque para así poder seguir ingresando los postings/documentos correspondientes al token que se ha mergeado, esto se hace en la función *combine_blocks()*. Puedes encontrar el código [aquí](/backend/indiceInvertido.py#combine-indices)
 
 - actualizar_tf_idf()
 
@@ -120,6 +130,21 @@ WHERE T.track_id = songslist.track_id;
 ```
 
 La función de búsqueda toma una consulta Q y un número k para devolver los k resultados superiores basados en la coincidencia de texto completo. La consulta se divide y se reformatea para adaptarse a la función to_tsquery. La consulta SQL busca coincidencias en la columna full_text y devuelve artistas, nombres de canciones y una puntuación de coincidencia (rank).
+
+### Experimento
+
+N | My Index | PostgreSQL
+---|---|---|
+1000 | 0.0294 | 0.0385
+2000 | 0.0311 | 0.0383
+4000 | 0.0526 | 0.0491
+8000 | 0.1412 | 0.0739
+16000 | 0.3451 | 0.259
+18000 | 0.3551 | 0.256
+
+<img src="IMG/IndiceInvertido.png" width="500">
+
+### Indice Multidimencional
 
 ### MFCC
 Para la obtención de los vectores característicos que representen a cada canción que indexaremos usamos los Coeficientes Cepstrales de las frecuencias de Mel (MFCC). Normalmente se usan 13 coeficientes, ya que empíricamente se ha determinado que es la cantidad recomendable para una buena presición en la extracción de las características. Sin embargo, nosotros usaremos 20, ya que para la extracción de características en música es recomendable usar más coeficientes, cómo mínimo 20. 
@@ -176,7 +201,6 @@ def range_search(query, C, radius):
     return results
 
 ```
-
 
 ### Rtree
 Usamos la librería rtree de python. Para esto necesitamos los puntos que serían los vectores característcos de las canciones que vamos a indexar, pero todos deben de tener la misma dimensión. El rtree en python debe tener ciertas características como los archivos en los que se va a escribir el índice, la dimensión, etc. 

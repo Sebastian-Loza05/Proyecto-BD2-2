@@ -109,3 +109,33 @@ a {
 }
 
 */
+
+.body {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1; /* barra de desplazamiento y pista */
+}
+
+/* Estilos para Webkit (Chrome, Safari, Edge) */
+.body::-webkit-scrollbar {
+  width: 10px; /* ancho de la barra de desplazamiento */
+}
+
+.body::-webkit-scrollbar-track {
+  background: #f1f1f1; /* color de fondo de la pista */
+  border-radius: 10px; /* bordes redondeados */
+}
+
+.body::-webkit-scrollbar-thumb {
+  background: #888; /* color de la barra de desplazamiento */
+  border-radius: 10px; /* bordes redondeados */
+}
+
+.body::-webkit-scrollbar-thumb:hover {
+  background: #555; /* color de la barra de desplazamiento al pasar el cursor */
+}
+
+/* Estilo para la cabecera */
+.container{
+  height: 100vh; /* Altura completa de la ventana del navegador */
+  overflow-y:auto ;
+}

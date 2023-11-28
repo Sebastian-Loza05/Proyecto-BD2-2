@@ -2,9 +2,11 @@ from flask import request, jsonify, abort
 from app import app
 import indiceInvertido as invert
 import database
-import ffmpeg
 import os
 import json
+import ffmpeg
+import subprocess
+import requests
 
 import numpy as np
 
@@ -17,6 +19,7 @@ from indice_multidimensional.indice import (
 
 @app.route('/faiss', methods=['POST'])
 def search_faissa():
+    print("faiss")
     error_422 = False
     output = "uploads/output.wav"
     try:
@@ -45,10 +48,7 @@ def search_faissa():
         response = faiss_search(vector, top_k)
 
         os.remove(output)
-        return jsonify({
-            'success': True,
-            'results': response
-        })
+        return jsonify(response)
     except Exception as e:
         print(e)
         if error_422:
@@ -58,11 +58,13 @@ def search_faissa():
 
 @app.route('/rtree', methods=['POST'])
 def search_rtree():
+
+    print("rtree")
     error_422 = False
-    output = "uploads/output.wav"
+    output = "E:\\BD2\\PROYECTO2\\p2\\Proyecto-BD2-2\\backend\\uploads\\output.wav"
     try:
         audio = request.files['audio']
-
+        print(audio)
         if not audio:
             error_422 = True
             abort(422)
@@ -70,8 +72,10 @@ def search_rtree():
         data = request.form.get('json')
         json_data = json.loads(data)
         top_k = json_data['topK']
+        print(top_k)
 
-        save_file = f'uploads/{audio.filename}'
+        save_file = f'E:\\BD2\\PROYECTO2\\p2\\Proyecto-BD2-2\\backend\\uploads\\{audio.filename}'
+        print(save_file)
         audio.save(save_file)
         ffmpeg.input(save_file).output(output).run()
         os.remove(save_file)
@@ -80,10 +84,8 @@ def search_rtree():
         # vector = vectorize(output)
         response = knn_search(vector, top_k)
         os.remove(output)
-        return jsonify({
-            'success': True,
-            'results': response
-        })
+ 
+        return jsonify(response)
 
     except Exception as e:
         print(e)
@@ -121,3 +123,95 @@ def mongo():
     return "Hello from mongo"
 
 
+@app.route('/spotify/token', methods=['POST'])
+def get_spotify_token():
+    code = request.json.get('code')
+    redirect_uri = 'http://localhost:3000/spoti'
+    client_id = '3d29c771b9a64a1d867e8fc98e855734'
+    client_secret = '1949ef1c33a0420c91eac138b632ea59'
+
+    auth_response = requests.post(
+        'https://accounts.spotify.com/api/token',
+        data={
+            'grant_type': 'authorization_code',
+            'code': code,
+            'redirect_uri': redirect_uri,
+            'client_id': client_id,
+            'client_secret': client_secret
+        },
+    )
+
+    if auth_response.status_code == 200:
+        auth_response_data = auth_response.json()
+        access_token = auth_response_data.get('access_token')
+        refresh_token = auth_response_data.get('refresh_token')
+        return jsonify({
+            'access_token': access_token,
+            'refresh_token': refresh_token
+        })
+    else:
+        return jsonify({'message': 'Invalid code'}), 400
+    
+
+@app.route('/spotify/track/<track_id>', methods=['GET'])
+def get_track_details(track_id):
+    access_token = request.headers.get('Authorization').split(" ")[1]
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+    track_response = requests.get(
+        f'https://api.spotify.com/v1/tracks/{track_id}',
+        headers=headers
+    )
+
+    if track_response.status_code == 200:
+        track_data = track_response.json()
+        image_url = track_data['album']['images'][0]['url']  # Obtén la URL de la imagen más grande
+        preview_url = track_data.get('preview_url', None)
+        return jsonify({
+            'image_url': image_url,
+            'name': track_data['name'],
+            'artists': [artist['name'] for artist in track_data['artists']],
+            'preview_url': preview_url
+        })
+    else:
+        print(f"Error fetching track details: {track_response.status_code}")
+        print(f"Response: {track_response.json()}")
+        return jsonify({'message': 'Could not fetch track details'}), 400
+    
+
+@app.route('/spotify/playlist/<playlist_id>', methods=['GET'])
+def get_playlist_tracks(playlist_id):
+    access_token = request.headers.get('Authorization').split(" ")[1]
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    # Obtener las 50 primeras canciones de la playlist
+    playlist_response = requests.get(
+        f'https://api.spotify.com/v1/playlists/{playlist_id}/tracks?limit=50',
+        headers=headers
+    )
+
+    if playlist_response.status_code == 200:
+        playlist_data = playlist_response.json()
+        tracks = []
+        for item in playlist_data['items']:
+            track = item['track']
+            track_info = {
+                'name': track['name'],
+                'artists': [artist['name'] for artist in track['artists']],
+                'duration_ms': track['duration_ms'],
+                'preview_url': track['preview_url'],
+                'album': {
+                    'name': track['album']['name'],
+                    'images': track['album']['images']
+                }
+            }
+            tracks.append(track_info)
+
+        return jsonify(tracks)
+    else:
+        print(f"Error fetching playlist details: {playlist_response.status_code}")
+        print(f"Response: {playlist_response.json()}")
+        return jsonify({'message': 'Could not fetch playlist details'}), 400

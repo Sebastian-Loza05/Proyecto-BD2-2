@@ -1,7 +1,8 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './spoti.module.css'; // Asegúrate de que las clases de estilo se importan correctamente
 import axios from 'axios';
+
 
 function Spoti() {
   const [activeItem, setActiveItem] = useState('Home');
@@ -14,34 +15,67 @@ function Spoti() {
   const [searchMethod, setSearchMethod] = useState('My Index');
   const [searchNumber, setSearchNumber] = useState(10);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [spotifyAccessToken, setSpotifyAccessToken] = useState(null);
+
+  const fetchTopSongs = async () => {
+    try {
+        const playlistId = "37i9dQZF1DX9C8KzGEUKV4"; // ID de la lista de reproducción de Spotify
+        const response = await axios.get(`http://localhost:5000/spotify/playlist/${playlistId}`, {
+            headers: {
+                Authorization: `Bearer ${spotifyAccessToken}`,
+            },
+        });
+
+        // Suponiendo que tu endpoint de backend devuelve un array de canciones
+        const topSongs = response.data.map(song => ({
+            track_name: song.name,
+            track_artist: song.artists.join(", "),
+            duration: convertMsToMinutesSeconds(song.duration_ms),
+            imageUrl: song.album.images[0].url,
+            preview_url: song.preview_url,
+            lyrics: 'From Éxitos Perú' // Ya que Spotify no provee letras
+        }));
+        
+        setSongs(topSongs);
+    } catch (error) {
+        console.error('Error al obtener las mejores canciones:', error);
+    }
+};
+
+
+
+  const getSpotifyAccessToken = async (code) => {
+    try {
+      const response = await axios.post('http://localhost:5000/spotify/token', { code });
+      const { access_token } = response.data;
+      setSpotifyAccessToken(access_token); 
+    } catch (error) {
+      console.error('Error al obtener el token de Spotify:', error);
+    }
+  };
+
+  useEffect(() => {
+
+    if (typeof window !== 'undefined') {
+      const queryParams = new URLSearchParams(window.location.search);
+      const code = queryParams.get('code');
+
+      if (code && !spotifyAccessToken) {
+        getSpotifyAccessToken(code);
+      }
+      if (spotifyAccessToken) {
+        fetchTopSongs(); 
+    }
+    }
+  }, [spotifyAccessToken]);
+
   const [songs, setSongs] = useState([
-    { track_name: 'Un Peso', track_artist: 'J Balvin', duration: '3:30', imageUrl:'https://cdn.discordapp.com/attachments/1155323431915630594/1178543286206611539/ab67616d0000b2734891d9b25d8919448388f3bb.jpeg?ex=657686f7&is=656411f7&hm=8ced1986172409120b4f7ca402a579c6afdc65958d59292617dd9562336797a7&', lyrics: 'Hola'},
-    { track_name: 'Un Preview', track_artist: 'Bad Bunny', duration: '2:00', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178546977194123305/Bad_Bunny_-_Un_Preview.png?ex=65768a67&is=65641567&hm=ec952bf01e4595dd05e85d2c0dd2efe3f7b4782b1a59032575f9cbd0f424503d&', lyrics: 'Hola'},
-    { track_name: 'LALA', track_artist: 'Mike Towers', duration: '2:50', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547097679704094/Sin-titulo-1.jpg?ex=65768a84&is=65641584&hm=1cbd619e375ca982fee7bff85b34b9b562388860d0d9bff6422832f77ae3bb09&', lyrics: 'Hola'},
-    { track_name: 'Lo que hay x aqui', track_artist: 'Rels B', duration: '3:00', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547323811418113/ab67616d0000b27385acf6becb994eb3cf3edd15.jpeg?ex=65768aba&is=656415ba&hm=59d20b6b443696f96d67fbe2653310f0c36be540ce001fd1080b4e7474636c5c&', lyrics: 'Hola'},
-    { track_name: 'Columbia', track_artist: 'Quevedo', duration: '6:70', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547337832964178/ab67616d0000b273a00a817b017c6f6bf8460be9.jpeg?ex=65768abd&is=656415bd&hm=712a85140e20724f07a80b4401795dfdc1de7873913d884673a1a8e358fbe4df&' , lyrics: 'Hola'},
-    { track_name: 'Vagabundo', track_artist: 'Sebastian Yatra', duration: '4:10', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547353142169611/ab67616d0000b2732d6016751b8ea5e66e83cd04.jpeg?ex=65768ac1&is=656415c1&hm=5a25cf9b4aa00a95abdd00467c89f4cc9c8283508c98d3f898e40db5c36ac468&', lyrics: 'Hola'},
-    { track_name: 'Un Finde', track_artist: 'Big One', duration: '3:50', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547424172703835/ab67616d0000b273fc9ce77ab8fcd9eadda3acd3.jpeg?ex=65768ad2&is=656415d2&hm=1e535422aef99230a01e06303db1d45e2e9fb3c3fc8a2927be87110df517811d&', lyrics: 'Hola'},
-    { track_name: 'La Diferencia', track_artist: 'Wampy', duration: '3:36', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178668402563362826/maxresdefault_1.jpg?ex=6576fb7d&is=6564867d&hm=cd23955d96ebd764aa650612f7654e31aa6524802179c50d37dd532102b2bf9b&', lyrics: 'Hola'},
-    { track_name: 'Ojitos Lindos', track_artist: 'Bad Bunny', duration: '3:30', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178668553579286538/descarga_3.jpeg?ex=6576fba1&is=656486a1&hm=8d2003425bc0f453308af7f33023d65dc1ec969c3136457ca16b5318b3c728b1&', lyrics: 'Hola'},
-    { track_name: 'One Day', track_artist: 'Tainy', duration: '3:30', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547609011494983/J_Balvin_-_Un_Dia_One_Day.png?ex=65768afe&is=656415fe&hm=06b16133e70ffda3da54e400499fac4a91cd201314b35d53d345f92ac28ca8b5&', lyrics: 'Hola'},
   ]);
 
   const handleHomeClick = () => {
     setActiveItem('Home');
     // Restablece las canciones a su estado inicial
-    setSongs([
-      { track_name: 'Un Peso', track_artist: 'J Balvin', duration: '3:30', imageUrl:'https://cdn.discordapp.com/attachments/1155323431915630594/1178543286206611539/ab67616d0000b2734891d9b25d8919448388f3bb.jpeg?ex=657686f7&is=656411f7&hm=8ced1986172409120b4f7ca402a579c6afdc65958d59292617dd9562336797a7&', lyrics: 'Hola'},
-      { track_name: 'Un Preview', track_artist: 'Bad Bunny', duration: '2:00', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178546977194123305/Bad_Bunny_-_Un_Preview.png?ex=65768a67&is=65641567&hm=ec952bf01e4595dd05e85d2c0dd2efe3f7b4782b1a59032575f9cbd0f424503d&', lyrics: 'Hola'},
-      { track_name: 'LALA', track_artist: 'Mike Towers', duration: '2:50', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547097679704094/Sin-titulo-1.jpg?ex=65768a84&is=65641584&hm=1cbd619e375ca982fee7bff85b34b9b562388860d0d9bff6422832f77ae3bb09&', lyrics: 'Hola'},
-      { track_name: 'Lo que hay x aqui', track_artist: 'Rels B', duration: '3:00', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547323811418113/ab67616d0000b27385acf6becb994eb3cf3edd15.jpeg?ex=65768aba&is=656415ba&hm=59d20b6b443696f96d67fbe2653310f0c36be540ce001fd1080b4e7474636c5c&', lyrics: 'Hola'},
-      { track_name: 'Columbia', track_artist: 'Quevedo', duration: '6:70', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547337832964178/ab67616d0000b273a00a817b017c6f6bf8460be9.jpeg?ex=65768abd&is=656415bd&hm=712a85140e20724f07a80b4401795dfdc1de7873913d884673a1a8e358fbe4df&' , lyrics: 'Hola'},
-      { track_name: 'Vagabundo', track_artist: 'Sebastian Yatra', duration: '4:10', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547353142169611/ab67616d0000b2732d6016751b8ea5e66e83cd04.jpeg?ex=65768ac1&is=656415c1&hm=5a25cf9b4aa00a95abdd00467c89f4cc9c8283508c98d3f898e40db5c36ac468&', lyrics: 'Hola'},
-      { track_name: 'Un Finde', track_artist: 'Big One', duration: '3:50', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547424172703835/ab67616d0000b273fc9ce77ab8fcd9eadda3acd3.jpeg?ex=65768ad2&is=656415d2&hm=1e535422aef99230a01e06303db1d45e2e9fb3c3fc8a2927be87110df517811d&', lyrics: 'Hola'},
-      { track_name: 'La Diferencia', track_artist: 'Wampy', duration: '3:36', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178668402563362826/maxresdefault_1.jpg?ex=6576fb7d&is=6564867d&hm=cd23955d96ebd764aa650612f7654e31aa6524802179c50d37dd532102b2bf9b&', lyrics: 'Hola'},
-      { track_name: 'Ojitos Lindos', track_artist: 'Bad Bunny', duration: '3:30', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178668553579286538/descarga_3.jpeg?ex=6576fba1&is=656486a1&hm=8d2003425bc0f453308af7f33023d65dc1ec969c3136457ca16b5318b3c728b1&', lyrics: 'Hola'},
-      { track_name: 'One Day', track_artist: 'Tainy', duration: '3:30', imageUrl:'https://cdn.discordapp.com/attachments/1166998304937222166/1178547609011494983/J_Balvin_-_Un_Dia_One_Day.png?ex=65768afe&is=656415fe&hm=06b16133e70ffda3da54e400499fac4a91cd201314b35d53d345f92ac28ca8b5&', lyrics: 'Hola'},
-    ]);
+    fetchTopSongs();
   };
 
   const handleFileUpload = (event) => {
@@ -67,6 +101,8 @@ function Spoti() {
       }, 500);
     }
   };
+
+ 
 
   const defaultRightContent = (
     <div className={styles.defaultRight}>
@@ -94,6 +130,10 @@ function Spoti() {
 
   const handleSongClick = (song) => {
     setSelectedSong(song);
+    const audioElement = document.getElementById('audio-preview');
+    audioElement.pause();
+    audioElement.currentTime = 0;
+    audioElement.src = song.preview_url;
   };
 
   const handleSearchChange = (e) => {
@@ -111,25 +151,32 @@ function Spoti() {
   const searchSongs = async () => {
     setActiveItem('Buscar');
     try {
-      console.log(searchMethod);
       let endpoint = '';
       if (searchMethod === 'PostgreSQL') {
         endpoint = 'http://127.0.0.1:5000/psql';
       } else if (searchMethod === 'MyIndex') {
         endpoint = 'http://127.0.0.1:5000/invert_index';
       }
+  
       const response = await axios.post(endpoint, {
         textQuery: searchText,
-        topK: searchNumber
+        topK: searchNumber,
       });
-
+  
       if (response.status === 200) {
-        const searchResults = response.data.map((song) => ({
-          ...song,
-          duration: convertMsToMinutesSeconds(song.duration_ms),
-          imageUrl: 'https://cdn.discordapp.com/attachments/1166998304937222166/1178547424172703835/ab67616d0000b273fc9ce77ab8fcd9eadda3acd3.jpeg?ex=65768ad2&is=656415d2&hm=1e535422aef99230a01e06303db1d45e2e9fb3c3fc8a2927be87110df517811d&'
-        }));
-        setSongs(searchResults);
+        const songPromises = response.data.map(async (song) => {
+          const { image_url, preview_url } = await getTrackImageUrl(song.track_id);
+          return {
+            ...song,
+            duration: convertMsToMinutesSeconds(song.duration_ms),
+            imageUrl: image_url,
+            preview_url: preview_url,
+          };
+        });
+  
+        const updatedSongs = await Promise.all(songPromises);
+  
+        setSongs(updatedSongs);
       } else {
         console.error('Error en la búsqueda:', response.status);
       }
@@ -148,7 +195,9 @@ function Spoti() {
     setActiveItem('Your Library');
     const formData = new FormData();
     console.log('Botón escanear presionado');
-    formData.append('audio', selectedFile);
+    if (selectedFile) {
+      formData.append('audio', selectedFile);
+    }
     formData.append('json', JSON.stringify({ topK: searchNumber }));
     let endpoint = '';
     switch (algorithm) {
@@ -173,9 +222,13 @@ function Spoti() {
       });
   
       if (response.status === 200) {
+        const imagePromises = response.data.map(song => getTrackImageUrl(song.track_id));
+        const images = await Promise.all(imagePromises);
         const searchResults = response.data.map((song) => ({
           ...song,
           duration: convertMsToMinutesSeconds(song.duration_ms),
+          imageUrl: images[index],
+          preview_url: song.preview_url
         }));
         setSongs(searchResults);
       } else {
@@ -186,14 +239,30 @@ function Spoti() {
     }
   };
 
-  const defaultPlaylistImageUrl = "https://cdn.discordapp.com/attachments/1155323431915630594/1178542876972556379/rock-music-icon-vinyl-record-png.webp?ex=65768696&is=65641196&hm=06e5d54224876a15d3a766ad6695cfb570c0427db4850f9c46235034bf599d92&";
+// Modifica la función getTrackImageUrl para capturar la URL de imagen y preview
+const getTrackImageUrl = async (trackId) => {
+  try {
+    const cleanedTrackId = trackId.trim();
+    const response = await axios.get(`http://localhost:5000/spotify/track/${cleanedTrackId}`, {
+      headers: {
+        Authorization: `Bearer ${spotifyAccessToken}`,
+      },
+    });
+    return response.data; // Captura tanto la URL de imagen como la URL de preview
+  } catch (error) {
+    console.error('Error al obtener la imagen y el preview del track:', error);
+    return { image_url: '', preview_url: '' }; // Retorna ambas URLs vacías en caso de error
+  }
+};
+
+  const defaultPlaylistImageUrl = "https://cdn.discordapp.com/attachments/1166998304937222166/1178931502222938122/music-playlist-icon-5.jpg?ex=6577f085&is=65657b85&hm=3f7283d17be86c77e169b855044f45e97402d6027b486d7fe0e61e6f0a4fca50&";
   
   return(
     <main className={styles.container}>
-      <div className={styles.header}> 
+      {/*<div className={styles.header}> 
         <h1>Pineapple Music</h1>
         <img src="https://cdn.discordapp.com/attachments/1155323431915630594/1178600841394016317/6532493.png?ex=6576bc91&is=65644791&hm=d5d99fef558ed5539b9ed9f59b1358d0d5a67fdd3d5a3c193c2b04247632f3dd&" alt="Bienvenido" className={styles.logo} />
-      </div>
+  </div>*/}
       <div className={styles.content}>
         <div className={styles.columns}>
           <div className={`${styles.columnLeft} ${styles.columnScroll}`}>
@@ -232,6 +301,7 @@ function Spoti() {
                 </div>
               )}
               
+              
             </div>
             <button className={styles.scanButton} onClick={handleScanClick}>Escanear</button>
             <select
@@ -243,6 +313,10 @@ function Spoti() {
               <option value="FAISS">FAISS</option>
               <option value="RTREE">RTREE</option>
             </select>
+            <div className={styles.branding}>
+                <img src="https://cdn.discordapp.com/attachments/1155323431915630594/1178600841394016317/6532493.png" alt="Logo" className={styles.logo} />
+                <h1 className={styles.title}>Pineapple Music</h1>
+              </div>
           </div>
           <div className={`${styles.columnMiddle} ${styles.columnScroll}`}>
           <div className={styles.searchContainer}>
@@ -256,7 +330,7 @@ function Spoti() {
               
               <input
                 type="number"
-                placeholder="Top K"
+                placeholder="Top K - Radius"
                 value={searchNumber} 
                 onChange={handleNumberChange} 
                 className={styles.inputField}
@@ -295,6 +369,10 @@ function Spoti() {
                   <div className={styles.songArtist}>{selectedSong.track_artist}</div>
                   <div className={styles.songDuration}>{selectedSong.duration}</div>
                 </div>
+                <audio id="audio-preview" controls>
+                  <source src={selectedSong.preview_url} type="audio/mpeg" />
+                  Tu navegador no soporta el elemento de audio.
+                </audio>
                 <div className={styles.songLyrics}>
                   {selectedSong.lyrics}
                 </div>

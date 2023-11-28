@@ -1,7 +1,8 @@
+
 /* Estilo para la cabecera */
 .container{
   height: 100vh; /* Altura completa de la ventana del navegador */
-  overflow: hidden;
+  overflow-y:hidden ;
 }
 
 .header {
@@ -14,8 +15,27 @@
   justify-content: center;
 }
 
-.logo { 
-  margin-right: 10px; /* Añade un poco de margen entre el logo y el título */
+/* Estilos para el branding en la columna izquierda */
+.branding {
+  background-color: #161616; /* Fondo negro */
+  padding: 20px; /* Espaciado interno */
+  border-radius: 8px; /* Bordes redondeados */
+  box-shadow: 0px 0px 8px rgba(211, 3, 3, 0.589); /* Sombra para dar efecto de elevación */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px; /* Ajusta este valor según necesites espacio */
+}
+
+.logo {
+  margin-top: 10px;
+  max-width: 100px; /* Ajusta el tamaño del logo según necesites */
+  margin-bottom: 10px;
+}
+
+.title {
+  color: white; /* Texto en blanco */
+  text-align: center;
 }
 
 .content {
@@ -25,24 +45,29 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  min-height: 793px; /* Agrega esta línea para que el contenido ocupe todo el alto de la pantalla */
+  min-height: 100vh; /* Agrega esta línea para que el contenido ocupe todo el alto de la pantalla */
   box-sizing: border-box; /* Para que el padding no aumente el alto */
 }
 
 /* Estilo para las columnas */
 .columns {
   display: flex;
-  width: 100%;
-  flex: 0.5; /* Haz que las columnas ocupen todo el espacio vertical disponible */
+  flex: 1; /* Ocupa todo el espacio disponible */
+  overflow: hidden; /* Oculta el desbordamiento aquí */
 }
 
+.columnLeft, .columnMiddle, .columnRight {
+  overflow-y: auto; /* Permite desplazamiento vertical si es necesario */
+  max-height: 100%; /* Ocupa como máximo todo el alto disponible de .columns */
+}
 
 /* Estilo para la columna del medio */
 .columnMiddle {
   flex: 4; /* Toma el doble de espacio que las columnas izquierda y derecha */
   background-color: transparent; /* Color de fondo personalizado */
   box-sizing: border-box; /* Para que el padding no aumente el ancho */
-  padding: 20px
+  padding: 20px;
+  overflow-y: auto;
 }
 
 /* Puedes personalizar aún más los estilos según tus necesidades */
@@ -90,8 +115,8 @@
 
 /* Estilo para la imagen de la playlist */
 .playlistImage {
-  width: 50px; /* Tamaño de la imagen */
-  height: 50px; /* Tamaño de la imagen */
+  width: 40px; /* Tamaño de la imagen */
+  height: 40px; /* Tamaño de la imagen */
   margin-right: 10px; /* Espaciado a la derecha de la imagen */
   object-fit: cover; /* Asegura que la imagen cubra todo el espacio sin distorsionarse */
 }
@@ -110,8 +135,9 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start; /* Asegura que los elementos se alineen al principio */
-  gap: 40px 50px; /* Espacio entre elementos */
+  gap: 20px 50px; /* Espacio entre elementos */
   justify-content: flex-start; /* Alinea los elementos al principio */
+  overflow-y: auto;
 }
 
 /* Estilo para la tarjeta de cada canción */
@@ -120,7 +146,7 @@
   background-color: #282828; /* Color de fondo */
   border-radius: 8px; /* Bordes redondeados */
   overflow: hidden; /* Oculta lo que se salga de los bordes */
-  margin-bottom: 8px; /* Espaciado inferior */
+  margin-bottom: 1px; /* Espaciado inferior */
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -205,7 +231,7 @@
   background-color: transparent; /* Fondo negro como indicaste */
   color: white; /* Texto en blanco */
   padding: 10px; /* Espaciado interno */
-  max-width: 400px;
+  width: 400px;
 }
 
 /* Estilo para el contenido de la canción seleccionada */

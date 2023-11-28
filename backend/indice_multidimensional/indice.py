@@ -31,20 +31,14 @@ def get_vector(filename):
 
 def vectorize(filename):
     x, sr = librosa.load(filename)
-    mfccs = librosa.feature.mfcc(y=x, sr=sr, n_mfcc=20)
+    mfccs = librosa.feature.mfcc(y=x, sr=sr, n_mfcc=20, hop_length=742000)
     res = []
+    # 2.- PCA
     for coef in mfccs:
-        rango = len(coef) // 2
-        inicio = 0
-        for i in range(2):
-            if (len(coef[inicio + rango:]) < rango):
-                li = coef[inicio:]
-                res.append(sum(li) / len(li))
-                break
-            li = coef[inicio:inicio + rango]
-            res.append(sum(li) / len(li))
-            inicio += rango
-    if (len(res) != 40):
+        for dato in coef:
+            res.append(dato)
+    print(len(res))
+    if (len(res) != 20):
         print("ERROR: ", filename)
         exit(0)
     return res
@@ -97,7 +91,7 @@ def create_indexFaiss(mfcss_vectors=None):
         index = faiss.read_index("puntosFaiss.index")
         return index
     dimension = 100
-    index = faiss.IndexHNSWFlat(40, 16)
+    index = faiss.IndexHNSWFlat(100, 32)
     # index.hnsw.efConstruction = 40
     puntos = []
     for value in mfcss_vectors.values():
@@ -106,7 +100,7 @@ def create_indexFaiss(mfcss_vectors=None):
             "[", "").replace(
             "]", "").replace(
             "\n", "").split(",")
-        if len(point) == 40:
+        if len(point) == 100:
             point = [float(x) for x in point[:dimension]]
             puntos.append(point)
     puntos = np.array(puntos)
@@ -117,7 +111,13 @@ def create_indexFaiss(mfcss_vectors=None):
     # index.add(puntos_nuevos)
     # index.add(puntos)
     #
-    index.add(puntos)
+    print("asd_")
+    try:
+        index.add(puntos)
+        print("-", len(puntos[0]))
+    except Exception as e:
+        print("Error ocurrido:", e)
+        traceback.print_exc()
     # tamaño_lote = 1000  # Ajusta esto según tu entorno y recursos disponibles
     # num_puntos = puntos.shape[0]
     # try:

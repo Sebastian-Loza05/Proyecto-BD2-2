@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 def load_dataframes():
-    df = pd.read_csv("complete_spotify.csv", on_bad_lines="skip")
+    df = pd.read_csv("indice_multidimensional/complete_spotify.csv", on_bad_lines="skip")
     mfcss_vectors = {}
     puntos = {}
     for i, fila in df.iterrows():
@@ -15,6 +15,7 @@ def load_dataframes():
         punto_info = {
             "track_name": fila["track_name"],
             "track_artist": fila["track_artist"],
+            "track_preview": fila["track_preview"],
             "lyrics": fila["lyrics"],
             "MFCC_Vector": punto
         }
@@ -30,7 +31,7 @@ def get_mfcc_vector(file_path):
 def euclidean_distance(vector1, vector2):
     return np.linalg.norm(vector1 - vector2)
 
-def knn_search(query, C, k):
+def knn_searchS(query, C, k):
     distances = []
 
     for track_id, punto_info in C.items():
@@ -56,26 +57,3 @@ def range_search(query, C, radius):
 
     return results
 
-puntos = load_dataframes()
-query = get_mfcc_vector("feel_alive.mp3")
-
-k = 5
-
-result = knn_search(query, puntos, k)
-for distance, track_id in result:
-    punto_info = puntos[track_id]
-    track_name = punto_info["track_name"]
-    print(f"track_id: {track_id}, track_name: {track_name}, Distancia: {distance}")
-
-
-r = 32
-
-range_result = range_search(query, puntos, r)
-if range_result:
-    print("Canciones similares dentro del rango:")
-    for distance, track_id in range_result:
-        punto_info = puntos[track_id]
-        track_name = punto_info["track_name"]
-        print(f"track_id: {track_id}, track_name: {track_name}, Distancia: {distance}")
-else:
-    print("No se encontraron canciones dentro del rango especificado.")
