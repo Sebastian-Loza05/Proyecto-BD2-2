@@ -330,7 +330,7 @@ const getTrackImageUrl = async (trackId) => {
               
               <input
                 type="number"
-                placeholder="Top K"
+                placeholder="Top K - Radius"
                 value={searchNumber} 
                 onChange={handleNumberChange} 
                 className={styles.inputField}
