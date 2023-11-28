@@ -1,5 +1,15 @@
 # Proyecto-BD2-2
 
+## Lista de Actividades
+
+| Integrante                         | Tareas                 |
+|-----------------------------------|------------------------------|
+| Coorahua Peña, Ruben Aaron        |                              |
+| Golac Córdova, Luis David         |                              |
+| Loza Mendoza, Sebastián           |                              |
+| Pajuelo Reyes, César Eduardo      |                              |
+| Rodríguez Gutiérrez, Gonzalo Alonso|                             |
+
 ## Introducción
 
 ### Objetivos
