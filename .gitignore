@@ -172,6 +172,11 @@ backend/indicesF1
 backend/indicesF2
 backend/actual_music/
 
+backend/indice_multidimensional/spotify_final.csv
 backend/puntosFaiss.index
 
+backend/musicas/*
 backend/indice_multidimensional/spotify_final.csv
+
+backend/*.dat
+backend/*.idx

@@ -202,7 +202,7 @@ function Spoti() {
     let endpoint = '';
     switch (algorithm) {
       case 'KNN':
-        endpoint = '/knn'; // Asegúrate de que la ruta esté en minúsculas si así está definida en el backend
+        endpoint = '/knn_search'; // Asegúrate de que la ruta esté en minúsculas si así está definida en el backend
         break;
       case 'FAISS':
         endpoint = '/faiss';

@@ -66,12 +66,12 @@ def knn_search(point, k):
     puntos = []
     for i, fila in df.iterrows():
         mfcss_vectors[i] = fila
-        # punto = fila["MFCC_Vector"].replace("[", "").replace("]", "").replace("\n", "").split(" ")
-        #
+        punto = fila["MFCC_Vector"].replace("[", "").replace("]", "").replace("\n", "").split(" ")
+
         # # punto = fila["vectores_100"].replace("[", "").replace("]", "").replace("\n", "").split(",")
-        # if len(punto) == 20:
-        #     punto = [float(x) for x in punto]
-        #     puntos.append(punto)
+        if len(punto) == 20:
+            punto = [float(x) for x in punto]
+            puntos.append(punto)
     indx = create_indexRtree(puntos)
     results = list(indx.nearest(coordinates=point, num_results=int(k)))
     response = []
