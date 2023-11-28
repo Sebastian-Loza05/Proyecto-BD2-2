@@ -36,13 +36,12 @@ def knn_searchS(query, C, k):
 
     for track_id, punto_info in C.items():
         vector = punto_info["MFCC_Vector"]
-        print(vector)
         distance = euclidean_distance(query, vector)
         distances.append((distance, track_id))
-
     distances.sort(key=lambda x: x[0])
 
-    neighbors = distances[:k]
+    neighbors = distances[:int(k)]
+    print("salio")
 
     return neighbors
 

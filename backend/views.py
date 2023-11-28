@@ -49,7 +49,7 @@ def sec_knn():
         response = []
         for distance, track_id in result:
             punto_info = puntos[track_id]
-            print(punto_info)
+            print("info: ", punto_info)
             response.append({
                 "track_name": punto_info["track_name"],
                 "track_preview": punto_info["track_preview"]
