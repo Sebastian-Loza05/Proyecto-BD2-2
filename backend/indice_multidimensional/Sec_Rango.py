@@ -13,11 +13,13 @@ def load_dataframes():
         punto = fila["MFCC_Vector"].replace("[", "").replace("]", "").replace("\n", "").split(" ")
         punto = [float(x) for x in punto]
         punto_info = {
+            "track_id": fila["track_id"],
             "track_name": fila["track_name"],
             "track_artist": fila["track_artist"],
             "track_preview": fila["track_preview"],
             "lyrics": fila["lyrics"],
-            "MFCC_Vector": punto
+            "MFCC_Vector": punto,
+            "duration": 30000,
         }
         puntos[track_id] = punto_info
     return puntos
@@ -41,7 +43,6 @@ def knn_searchS(query, C, k):
     distances.sort(key=lambda x: x[0])
 
     neighbors = distances[:int(k)]
-    print("salio")
 
     return neighbors
 

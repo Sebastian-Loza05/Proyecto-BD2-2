@@ -43,16 +43,18 @@ def sec_knn():
         query = get_mfcc_vector(save_file)
         os.remove(save_file)
 
-        print("faf")
         result = knn_searchS(query, puntos, top_k)
-        print("faf")
         response = []
         for distance, track_id in result:
             punto_info = puntos[track_id]
-            print("info: ", punto_info)
+            # print(punto_info["track_name"])
             response.append({
+                "track_id": punto_info["track_id"],
                 "track_name": punto_info["track_name"],
-                "track_preview": punto_info["track_preview"]
+                "track_artist": punto_info["track_artist"],
+                "lyrics": punto_info["lyrics"],
+                "track_preview": punto_info["track_preview"],
+                "duration": punto_info["duration"],
             })
 
         return jsonify({
