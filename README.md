@@ -230,16 +230,54 @@ Los vectores mfccs que usamos para el rtree son de dimensión 20. Como ya detall
 
 ### KNN-HighD
 
-#### IndexLSK
+En contextos de alta dimensionalidad como el reconocimiento de imágenes, la búsqueda de similitud y el procesamiento de lenguaje natural, surge un desafío crítico: localizar rápidamente los puntos de datos más similares, o "vecinos más cercanos", en grandes conjuntos de datos. `IndexHNSWFlat`, desarrollado como parte de la biblioteca FAISS (Facebook AI Similarity Search) de Facebook AI, aborda este desafío de manera efectiva.
+
+La principal fortaleza de IndexHNSWFlat reside en su estructura única basada en el algoritmo Hierarchical Navigable Small World (HNSW). Este enfoque jerárquico no solo facilita una búsqueda rápida y eficiente en espacios de alta dimensión sino que también mantiene una alta precisión en los resultados. A diferencia de los índices tradicionales que pueden luchar con la "maldición de la dimensionalidad", `IndexHNSWFlat` se destaca en manejar grandes volúmenes de datos con muchas dimensiones, proporcionando resultados rápidos y confiables.
+
+#### IndexHNSWFlat
 ##### Caracteristicas
- **Alta velocidad:** 
-- **Uso de funciones Hash:** 
+ **Alta velocidad de búsqueda:** Ofrece un rendimiento de búsqueda rápido, especialmente en espacios de alta dimensión, gracias a su estructura de grafo jerárquico.
+- **Uso de Gráficos de Navegación Pequeños y Jerárquicos (HNSW):** Utiliza el algoritmo HNSW (Hierarchical Navigable Small World), que construye un grafo multicapa para organizar los datos, permitiendo una navegación eficiente por el espacio de búsqueda.
 
 ##### Ventajas
+**Búsqueda Eficiente en Alta Dimensión:** Muy adecuado para búsquedas en espacios de alta dimensión, proporcionando un equilibrio entre precisión y velocidad.
+
+**Balance entre Precisión y Velocidad de Búsqueda:** Aunque es un índice de búsqueda aproximada, ofrece una alta precisión en los resultados, manteniendo al mismo tiempo una velocidad de búsqueda rápida.
+
+**Recuperación de Vecinos Más Cercanos de Alta Calidad:** Los gráficos HNSW son efectivos para encontrar vecinos más cercanos en conjuntos de datos complejos.
 
 ##### Desventajas
 
+**Uso de Memoria:** Puede tener un uso de memoria relativamente alto en comparación con otros índices, debido a la estructura de su grafo.
+
+**Complejidad en la Construcción del Índice:** La construcción del grafo HNSW puede ser más compleja y consumir más recursos en comparación con índices más simples.
+
 ##### Funcionamiento interno
+
+**Gráficos Multinivel:** En IndexHNSWFlat, los datos se organizan en un grafo con múltiples capas, donde cada capa es un subconjunto del anterior, comenzando con el nivel más alto que contiene pocos nodos.
+
+**Búsqueda Eficiente:** Durante la búsqueda, el algoritmo comienza en los niveles superiores del grafo, donde los saltos entre nodos son más grandes, y gradualmente desciende a niveles inferiores para búsquedas más refinadas, lo que permite una rápida localización de los vecinos más cercanos.
+
+**Inserción Dinámica:** Los puntos de datos se insertan dinámicamente en el grafo, conectándolos con sus vecinos más cercanos en cada capa, lo que optimiza la estructura del grafo para una navegación eficiente.
+
+**Sintaxis de indice** `IndexHNSWFlat(d, m)`
+**Parámetro d:** Dimensión de los Vectores
+
+**Parámetro m:** Número Máximo de Conexiones por Nodo
+    **Representación:** El parámetro `m` en `IndexHNSWFlat` especifica el número máximo de conexiones (edges) que un nodo puede tener en la estructura del grafo `HNSW`. Es una parte crucial de cómo se construye el grafo. Un valor más alto de `m` generalmente mejora la calidad de la búsqueda, ya que permite que cada punto tenga más conexiones con otros puntos, no obstante, Aumentar `m` también puede aumentar el tiempo que se tarda en construir el índice y realizar búsquedas. Mientras mas sea el mayor de `m` mas uso de memoria se ocurrira. 
+
+**Selección del parametro m**:
+Para una selección correcta de m, es necesario tener las siguientes cosideraciones.
+1. Tamaño del Conjunto de Datos: Para conjuntos de datos más grandes, un valor más alto de `m` puede ser beneficioso. Permite que cada punto tenga más conexiones.
+2. Dimensionalidad de los Datos: En espacios de alta dimensión, un valor más alto de `m` puede ayudar a mejorar la precisión de la búsqueda.
+3. Limitaciones de Memoria y Recursos: Un valor más alto de `m` incrementa el uso de memoria del índice, ya que cada nodo del grafo mantiene más conexiones.
+4. Velocidad de Construcción y Búsqueda: Un `m` más alto puede llevar a tiempos de construcción más largos del índice, en este caso la construcción no seria problema porque lo guardamos en un archivo `.index` cosa que solo se construye una vez y no cada vez que queramos hacer una búsqueda. En el caso de la busqueda un `m` alto puede puede mejorar la precisión pero tambien un poco mas lenta.
+
+En base a todas estas consideraciones, me base mas en una velocidad optima de búsqueda, por lo que para la elección del `m`, corri data de prueba para ver cual era mas rápido en construcción y busqueda con el archivo `pruebasfaiss.py` donde:
+
+<img src="IMG/Selección_521.png" width="500">
+
+El quién tenia mejor tiempo de construcción estaba entre 8 y 16, no obstante el que tenia mejor tiempo de busqueda era el 16; y como la construcción no seria problema por tener guardado el indice. El `m` adecuado para este caso seria 16.
 
 ### FLASK API
 El archivo views.py es una parte central de la aplicación Flask que se encarga de definir y manejar las rutas o endpoints a los que se puede acceder. Estos endpoints permiten realizar con un índice invertido y una base de datos PostgreSQL. 
@@ -355,7 +393,6 @@ Ruta de FAISS:
 def search_faissa():
     print("faiss")
     error_422 = False
-    output = "uploads/output.wav"
     try:
         audio = request.files['audio']
         if not audio:
@@ -368,21 +405,17 @@ def search_faissa():
 
         save_file = f'uploads/{audio.filename}'
         audio.save(save_file)
-        ffmpeg.input(save_file).output(output).run()
+        vector = get_vector(save_file)
         os.remove(save_file)
-        vector = vectorize(output)
-        # vector = get_vector(output)
         vector = np.array(vector)
-        # print(vector[-1])
-        # vector = np.trunc(vector * 10**7) / 10**7
         vector = vector.reshape(1, -1)
-
-        # print(vector[-1][-1])
-        print(vector)
         response = faiss_search(vector, top_k)
 
-        os.remove(output)
-        return jsonify(response)
+        return jsonify({
+            'success': True,
+            'results': response
+        })
+
     except Exception as e:
         print(e)
         if error_422:
