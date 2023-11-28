@@ -132,6 +132,8 @@ N | My Index | PostgreSQL
 16000 | 0.3451 | 0.259
 18000 | 0.3551 | 0.256
 
+<img src="IMG/IndiceInvertido.png" width="500">
+
 ### Indice Multidimencional
 
 ### MFCC
