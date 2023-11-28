@@ -262,6 +262,8 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 ```
 Endpoints:
+
+Ruta de nuestro indice:
 ```
 @app.route('/invert_index', methods=['POST'])
 def invert_index():
@@ -290,6 +292,118 @@ def psql():
     return jsonify(results)
 ```
 Este endpoint también espera una petición POST con un cuerpo que contiene un query_text y un top_k. Se establece una conexión con la base de datos utilizando la función connect del módulo database. Se utiliza la función search del módulo database para buscar en la base de datos y obtener resultados. Una vez obtenidos los resultados, se cierra la conexión con la base de datos. Los resultados se devuelven en formato JSON.
+
+Ruta de RTREE:
+```
+@app.route('/rtree', methods=['POST'])
+def search_rtree():
+
+    print("rtree")
+    error_422 = False
+    output = "uplouads/output.wav"
+    try:
+        audio = request.files['audio']
+        print(audio)
+        if not audio:
+            error_422 = True
+            abort(422)
+
+        data = request.form.get('json')
+        json_data = json.loads(data)
+        top_k = json_data['topK']
+        print(top_k)
+
+        save_file = f'uploads/{audio.filename}'
+        print(save_file)
+        audio.save(save_file)
+        ffmpeg.input(save_file).output(output).run()
+        os.remove(save_file)
+        # vector = get_vector(output)
+        vector = vectorize(output)
+        response = knn_search(vector, top_k)
+        os.remove(output)
+ 
+        return jsonify(response)
+
+    except Exception as e:
+        print(e)
+        if error_422:
+            abort(422)
+        else:
+            abort(500)
+```
+
+Este endpoint acepta solicitudes POST que contienen un archivo de audio y un objeto JSON para realizar búsquedas de similitud de audio utilizando un árbol R.
+
+Parámetros de la Solicitud
+
+- audio: Un archivo de audio que se carga como parte del formulario de datos de la solicitud.
+- json: Un objeto JSON en formato de cadena que contiene el parámetro topK. Este parámetro especifica la cantidad de resultados más similares que se quieren recuperar.
+
+Proceso: 
+
+- Recibe el archivo de audio y el objeto JSON a través de una solicitud de formulario multipart.
+- Guarda el archivo de audio temporalmente en el servidor.
+- Procesa el archivo de audio a través de ffmpeg para asegurarse de que esté en el formato correcto (WAV) para el análisis.
+- Elimina el archivo de audio original después de la conversión.
+- Vectoriza el audio convertido para obtener su representación numérica que será utilizada para la búsqueda de similitud.
+- Realiza una búsqueda en el árbol R con el vector resultante para encontrar los top_k audios más similares.
+
+Ruta de FAISS:
+```
+@app.route('/faiss', methods=['POST'])
+def search_faissa():
+    print("faiss")
+    error_422 = False
+    output = "uploads/output.wav"
+    try:
+        audio = request.files['audio']
+        if not audio:
+            error_422 = True
+            abort(422)
+
+        data = request.form.get('json')
+        json_data = json.loads(data)
+        top_k = json_data['topK']
+
+        save_file = f'uploads/{audio.filename}'
+        audio.save(save_file)
+        ffmpeg.input(save_file).output(output).run()
+        os.remove(save_file)
+        vector = vectorize(output)
+        # vector = get_vector(output)
+        vector = np.array(vector)
+        # print(vector[-1])
+        # vector = np.trunc(vector * 10**7) / 10**7
+        vector = vector.reshape(1, -1)
+
+        # print(vector[-1][-1])
+        print(vector)
+        response = faiss_search(vector, top_k)
+
+        os.remove(output)
+        return jsonify(response)
+    except Exception as e:
+        print(e)
+        if error_422:
+            abort(422)
+        else:
+            abort(500)
+```
+
+Este endpoint procesa solicitudes POST que incluyen un archivo de audio y un objeto JSON para realizar búsquedas de similitud de audio utilizando FAISS.
+Parámetros de la Solicitud:
+- audio: Un archivo de audio que se sube como parte del formulario de datos de la solicitud.
+- json: Un objeto JSON en formato de cadena que contiene el parámetro topK. Este parámetro especifica la cantidad de resultados más similares que se quieren recuperar.
+
+Proceso:
+- Recibe el archivo de audio y el objeto JSON a través de una solicitud de formulario multipart.
+- Guarda el archivo de audio temporalmente en el servidor.
+- Convierte el archivo de audio a un formato adecuado (WAV) utilizando ffmpeg para su posterior análisis.
+- Elimina el archivo de audio original tras su conversión.
+- Vectoriza el audio convertido para obtener una representación numérica que será utilizada en la búsqueda de similitud.
+- Realiza una búsqueda en el índice FAISS con el vector resultante para encontrar los top_k audios más similares.
+
 
 Prueba en postman:
 ![Estructura y Ejecución del índice](info-retrieval/public/consulta.png)
