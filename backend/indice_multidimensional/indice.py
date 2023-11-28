@@ -82,7 +82,7 @@ def knn_search(point, k):
             "track_artist": mf["track_artist"],
             "lyrics": mf["lyrics"],
             "track_preview": mf["track_preview"],
-            "duration": 30000
+            "duration_ms": 30000
         })
     indx.close()
     print(response)
@@ -135,7 +135,7 @@ def faiss_search(vec, topk):
             "track_artist": mf["track_artist"],
             "lyrics": mf["lyrics"],
             "track_preview": mf["track_preview"],
-            "duration": 30000
+            "duration_ms": 30000
         })
 
     return response

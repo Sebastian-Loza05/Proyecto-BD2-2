@@ -11,7 +11,7 @@ export default function Home() {
 
   const handleSpotifyAuth = () => {
     const scopes = 'user-read-private user-read-email';
-    const clientId = '3d29c771b9a64a1d867e8fc98e855734'; // Reemplaza esto con tu client ID de Spotify.
+    const clientId = '80aede95556043b8aac562834bd2b270'; // Reemplaza esto con tu client ID de Spotify.
     const redirectUri = `${window.location.origin}/spoti`; // Asegúrate de que esta URI de redirección esté registrada en tu aplicación de Spotify.
     const spotifyAuthUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=code&show_dialog=true`;
     window.location.href = spotifyAuthUrl;

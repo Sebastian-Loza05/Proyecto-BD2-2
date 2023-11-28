@@ -54,12 +54,12 @@ def sec_knn():
                 "track_artist": punto_info["track_artist"],
                 "lyrics": punto_info["lyrics"],
                 "track_preview": punto_info["track_preview"],
-                "duration": punto_info["duration"],
+                "duration_ms": punto_info["duration"],
             })
 
         return jsonify({
             'success': True,
-            'result': response
+            'results': response
         })
 
     except Exception as e:
@@ -218,8 +218,8 @@ def mongo():
 def get_spotify_token():
     code = request.json.get('code')
     redirect_uri = 'http://localhost:3000/spoti'
-    client_id = '3d29c771b9a64a1d867e8fc98e855734'
-    client_secret = '1949ef1c33a0420c91eac138b632ea59'
+    client_id = '80aede95556043b8aac562834bd2b270'
+    client_secret = '33eb2a3c10614481aa452eedabd0040c'
 
     auth_response = requests.post(
         'https://accounts.spotify.com/api/token',
