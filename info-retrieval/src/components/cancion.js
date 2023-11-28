@@ -1,12 +1,13 @@
-"use client"
 import styles from "@/styles/cancion.module.css" 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from 'react-modal'
-
-Modal.setAppElement('#__next');
 
 export default function Cancion({indice, cancion}) {
   const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    Modal.setAppElement('#__next');
+  }, []);
   const handleClick = () => {
     setModalOpen(true);
   }

@@ -42,8 +42,25 @@ export default function Home() {
       data = await getTopKByInvert(formData);
     }
     console.log("data: ", data);
-    setResults(data);
+    setRes
+    
+    ults(data);
   }
+
+  const handleSpotifyAuth = () => {
+    // Define los scopes que necesita tu aplicación
+    const scopes = 'user-read-private user-read-email';
+    
+    // Reemplaza con tu Client ID y tu Redirect URI
+    const clientId = '3d29c771b9a64a1d867e8fc98e855734';
+    const redirectUri = `${window.location.origin}/spoti`;
+
+    // Crea la URL para la autenticación de Spotify
+    const spotifyAuthUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=code&show_dialog=true`;
+
+    // Redirige al usuario a la URL de autenticación de Spotify
+    window.location.href = spotifyAuthUrl;
+  };
 
   return (
     <main className={styles.main}>
@@ -92,7 +109,7 @@ export default function Home() {
               </select>
             </label>
             <button type="submit"> Enviar </button>
-            <button type="button" onClick={() => router.push('/spoti')}>Ir a spotify</button>
+            <button type="button" onClick={handleSpotifyAuth}>Ir a spotify</button>
           </form>
         </section>
         <section className={styles.results}>
