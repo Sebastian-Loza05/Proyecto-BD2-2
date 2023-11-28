@@ -234,8 +234,6 @@ En contextos de alta dimensionalidad como el reconocimiento de imágenes, la bú
 
 La principal fortaleza de IndexHNSWFlat reside en su estructura única basada en el algoritmo Hierarchical Navigable Small World (HNSW). Este enfoque jerárquico no solo facilita una búsqueda rápida y eficiente en espacios de alta dimensión sino que también mantiene una alta precisión en los resultados. A diferencia de los índices tradicionales que pueden luchar con la "maldición de la dimensionalidad", `IndexHNSWFlat` se destaca en manejar grandes volúmenes de datos con muchas dimensiones, proporcionando resultados rápidos y confiables.
 
-Además, `IndexHNSWFlat` es particularmente útil cuando se necesita un equilibrio entre la precisión de los resultados y la velocidad de búsqueda. Su arquitectura multicapa permite realizar búsquedas rápidas a nivel macro, seguidas de búsquedas más detalladas y refinadas a nivel micro, lo que garantiza que los resultados sean tanto rápidos como precisos. Esto lo convierte en una opción ideal para aplicaciones en tiempo real donde tanto la velocidad como la precisión son cruciales.
-
 #### IndexHNSWFlat
 ##### Caracteristicas
  **Alta velocidad de búsqueda:** Ofrece un rendimiento de búsqueda rápido, especialmente en espacios de alta dimensión, gracias a su estructura de grafo jerárquico.
@@ -264,18 +262,16 @@ Además, `IndexHNSWFlat` es particularmente útil cuando se necesita un equilibr
 
 **Sintaxis de indice** `IndexHNSWFlat(d, m)`
 **Parámetro d:** Dimensión de los Vectores
-    **Representación:** El parámetro `d` representa la dimensión de los vectores de datos que se indexarán. En otras palabras, d es el número de componentes o características en cada vector de tu conjunto de datos.
-    
+
 **Parámetro m:** Número Máximo de Conexiones por Nodo
     **Representación:** El parámetro `m` en `IndexHNSWFlat` especifica el número máximo de conexiones (edges) que un nodo puede tener en la estructura del grafo `HNSW`. Es una parte crucial de cómo se construye el grafo. Un valor más alto de `m` generalmente mejora la calidad de la búsqueda, ya que permite que cada punto tenga más conexiones con otros puntos, no obstante, Aumentar `m` también puede aumentar el tiempo que se tarda en construir el índice y realizar búsquedas. Mientras mas sea el mayor de `m` mas uso de memoria se ocurrira. 
 
 **Selección del parametro m**:
 Para una selección correcta de m, es necesario tener las siguientes cosideraciones.
-1. Tamaño del Conjunto de Datos: Para conjuntos de datos más grandes, un valor más alto de `m` puede ser beneficioso. Permite que cada punto tenga más conexiones, lo que facilita la navegación por el espacio de datos y mejora las probabilidades de encontrar los vecinos más cercanos.
+1. Tamaño del Conjunto de Datos: Para conjuntos de datos más grandes, un valor más alto de `m` puede ser beneficioso. Permite que cada punto tenga más conexiones.
 2. Dimensionalidad de los Datos: En espacios de alta dimensión, un valor más alto de `m` puede ayudar a mejorar la precisión de la búsqueda.
-3. Requerimientos de Precisión de la Búsqueda: Si se necesita una alta precisión en los resultados de la búsqueda, un `m` más alto puede proporcionar mejores resultados.
-4. Limitaciones de Memoria y Recursos: Un valor más alto de `m` incrementa el uso de memoria del índice, ya que cada nodo del grafo mantiene más conexiones.
-5. Velocidad de Construcción y Búsqueda: Un `m` más alto puede llevar a tiempos de construcción más largos del índice, en este caso la construcción no seria problema porque lo guardamos en un archivo `.index` cosa que solo se construye una vez y no cada vez que queramos hacer una búsqueda. En el caso de la busqueda un `m` alto puede puede mejorar la precisión pero tambien un poco mas lenta.
+3. Limitaciones de Memoria y Recursos: Un valor más alto de `m` incrementa el uso de memoria del índice, ya que cada nodo del grafo mantiene más conexiones.
+4. Velocidad de Construcción y Búsqueda: Un `m` más alto puede llevar a tiempos de construcción más largos del índice, en este caso la construcción no seria problema porque lo guardamos en un archivo `.index` cosa que solo se construye una vez y no cada vez que queramos hacer una búsqueda. En el caso de la busqueda un `m` alto puede puede mejorar la precisión pero tambien un poco mas lenta.
 
 En base a todas estas consideraciones, me base mas en una velocidad optima de búsqueda, por lo que para la elección del `m`, corri data de prueba para ver cual era mas rápido en construcción y busqueda con el archivo `pruebasfaiss.py` donde:
 
