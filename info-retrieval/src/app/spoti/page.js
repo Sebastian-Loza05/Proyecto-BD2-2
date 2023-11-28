@@ -235,10 +235,11 @@ function Spoti() {
         // console.log("asjfa");
         // console.log(searchResults);
         // setSongs(searchResults);
-        const songsData = response.data;
+        const songsData = response.data.results;
         console.log('Canciones recibidas del backend:', songsData);
 
         const songsWithImages = await Promise.all(songsData.map(async (song) => {
+          console.log(song)
           const trackInfo = await getTrackImageUrl(song.track_id);
           return {
             ...song,
