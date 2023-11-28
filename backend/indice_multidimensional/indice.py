@@ -68,7 +68,6 @@ def knn_search(point, k):
         mfcss_vectors[i] = fila
         punto = fila["MFCC_Vector"].replace("[", "").replace("]", "").replace("\n", "").split(" ")
 
-        # # punto = fila["vectores_100"].replace("[", "").replace("]", "").replace("\n", "").split(",")
         if len(punto) == 20:
             punto = [float(x) for x in punto]
             puntos.append(punto)
@@ -93,71 +92,25 @@ def create_indexFaiss(mfcss_vectors=None):
     if os.path.exists("puntosFaiss.index"):
         index = faiss.read_index("puntosFaiss.index")
         return index
-    dimension = 100
-    index = faiss.IndexHNSWFlat(100, 32)
-    # index.hnsw.efConstruction = 40
+    dimension = 20
+    index = faiss.IndexHNSWFlat(20, 16)
     puntos = []
     for value in mfcss_vectors.values():
-        # point = value["MFCC_Vector"].replace(
-        point = value["vectores_100"].replace(
+        point = value["MFCC_Vector"].replace(
             "[", "").replace(
             "]", "").replace(
-            "\n", "").split(",")
-        if len(point) == 100:
+            "\n", "").split(" ")
+        if len(point) == 20:
             point = [float(x) for x in point[:dimension]]
             puntos.append(point)
     puntos = np.array(puntos)
-    # puntos = np.trunc(puntos * 10**7) / 10**7
-    # pca = PCA(n_components=20)
-    # puntos_nuevos = pca.fit_transform(puntos)
-    # puntos_nuevos = np.array(puntos_nuevos, dtype='float32')
-    # index.add(puntos_nuevos)
-    # index.add(puntos)
-    #
-    print("asd_")
     try:
         index.add(puntos)
-        print("-", len(puntos[0]))
     except Exception as e:
         print("Error ocurrido:", e)
         traceback.print_exc()
-    # tamaño_lote = 1000  # Ajusta esto según tu entorno y recursos disponibles
-    # num_puntos = puntos.shape[0]
-    # try:
-    #     for i in range(0, num_puntos, tamaño_lote):
-    #         lote = puntos[i:i + tamaño_lote]
-    #         index.add(lote)
-    #         print(f"Lote {i // tamaño_lote} añadido al índice")
-    # except Exception as e:
-    #     print("Error ocurrido:", e)
-    #     traceback.print_exc()
-    # # faiss.write_index(index, 'puntosFaiss.index')
-    # print("asd")
+    faiss.write_index(index, 'puntosFaiss.index')
     return index
-
-    # dimension = 100
-    # quantizer = faiss.IndexFlatL2(dimension)
-    # nlist = 100  # Número de listas invertidas (clústeres)
-    # index = faiss.IndexIVFFlat(quantizer, dimension, nlist, faiss.METRIC_L2)
-    # puntos = []
-    # for value in mfcss_vectors.values():
-    #     point = value["vectores_600"].replace(
-    #         "[", "").replace(
-    #         "]", "").replace(
-    #         "\n", "").split(",")
-    #     if len(point) == 600:
-    #         point = [float(x) for x in point[:dimension]]
-    #         puntos.append(point)
-    #
-    # puntos = np.array(puntos)
-    # num_data_points = 10000
-    # data = np.random.random((num_data_points, dimension)).astype('float32')
-    # assert not index.is_trained
-    # index.train(data)  # Entrenamiento con un subconjunto de los datos
-    # assert index.is_trained
-    # # index.add(puntos)
-    # # faiss.write_index(index, 'puntosFaiss.index')
-    # return index
 
 def faiss_search(vec, topk):
     df = load_dataframes()
@@ -177,8 +130,12 @@ def faiss_search(vec, topk):
     for i in indices[0]:
         mf = mfcss_vectors[i]
         response.append({
+            "track_id": mf["track_id"],
             "track_name": mf["track_name"],
-            "track_preview": mf["track_preview"]
+            "track_artist": mf["track_artist"],
+            "lyrics": mf["lyrics"],
+            "track_preview": mf["track_preview"],
+            "duration": 30000
         })
 
     return response

@@ -121,20 +121,12 @@ def search_faissa():
 
         save_file = f'uploads/{audio.filename}'
         audio.save(save_file)
-        # ffmpeg.input(save_file).output(output).run()
-        vector = vectorize(save_file)
+        vector = get_vector(save_file)
         os.remove(save_file)
-        # vector = get_vector(output)
         vector = np.array(vector)
-        # print(vector[-1])
-        # vector = np.trunc(vector * 10**7) / 10**7
         vector = vector.reshape(1, -1)
-
-        # print(vector[-1][-1])
-        print(vector)
         response = faiss_search(vector, top_k)
 
-        # os.remove(output)
         return jsonify({
             'success': True,
             'results': response
